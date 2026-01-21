@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Athlos Forge by Sebas</title>
+
+    <!-- Bootstrap CSS (external CDN) - proporciona el sistema de grid, utilidades y componentes base.
+            Muchas clases en este HTML (container, row, col-*, form-control, btn, card, etc.) vienen de Bootstrap. -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="css/style.css">
+
+    <style>
+    </style>
+</head>
+
+<body>
+
+    <nav class="navbar navbar-dark navbar-expand-lg fixed-top">
+        <div class="container-fluid d-flex justify-content-between align-items-center ps-3 pe-3">
+            <a class="navbar-brand d-flex align-items-center" href="index.html">
+                <img src="img/logo-athlos.png" alt="Athlos Forge Logo">
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav mx-auto gap-4">
+                    <li class="nav-item">
+                        <a class="nav-link active text-gold-flat fw-bold" href="index.html">Inicio</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white fw-bold" href="entrenamientos.html">Entrenamientos</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white fw-bold" href="blog.html">Blog</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white fw-bold" href="opiniones.html">Opiniones</a>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="ms-auto d-flex align-items-center gap-3">
+                <span class="text-gold-flat fw-bold" id="userGreeting" style="display: none; white-space: nowrap;"></span>
+                <button class="btn btn-gold-navbar text-white fw-bold" id="loginNavItem" onclick="window.location.href='login.html'" style="padding: 10px 25px; font-size: 0.9rem;">Acceder</button>
+                <button class="btn btn-danger fw-bold" id="logoutNavItem" onclick="logout()" style="display: none; padding: 10px 25px; font-size: 0.9rem;">Salir</button>
+            </div>
+        </div>
+    </nav>
+
+    <script>
+        function checkUserLogin() {
+            const usuario = localStorage.getItem('usuario');
+            if (usuario) {
+                const user = JSON.parse(usuario);
+                document.getElementById('userGreeting').textContent = 'Bienvenido ' + user.nombre;
+                document.getElementById('userGreeting').style.display = 'block';
+                document.getElementById('loginNavItem').style.display = 'none';
+                document.getElementById('logoutNavItem').style.display = 'block';
+            }
+        }
+        
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('usuario');
+            document.getElementById('userGreeting').style.display = 'none';
+            document.getElementById('loginNavItem').style.display = 'block';
+            document.getElementById('logoutNavItem').style.display = 'none';
+            window.location.reload();
+        }
+        
+        checkUserLogin();
+    </script>
+
+    <section class="hero-section">
+        <!--
+            Sección principal (hero):
+            - `hero-section` es una clase personalizada (no Bootstrap).
+            - Dentro se usan utilidades Bootstrap: `container`, `row`, `col-lg-*`, `text-center`, etc.
+            - El diseño responsivo (mostrar/ocultar `.frase-ordeandor` / `.frase-movil`) se controla con CSS personalizado y media queries.
+        -->
+        <div class="container">
+            <div class="row align-items-center">
+
+                <div class="col-lg-6 mb-5 mb-lg-0 text-center text-lg-start">
+
+                    <!-- Texto grande para ordenador (antes: .desktop-quote) -->
+                    <div class="frase-ordenador">
+                        <!-- `display-3` y `display-4` son utilidades tipográficas de Bootstrap (tamaños grandes). -->
+                        <h1 class="display-3 mb-4">
+                            Quien fortalece su cuerpo en la <span class="text-gold-gradient">juventud</span>,
+                            honra su <span class="text-gold-gradient">vejez</span>.
+                        </h1>
+                        <!-- `lead` y `text-secondary` son clases de Bootstrap para texto destacado y color secundario. -->
+                        <p class="lead text-secondary" style="font-family: 'Cinzel', serif; letter-spacing: 2px;">
+                            ATHLOS FORGE BY SEBAS
+                        </p>
+                    </div>
+
+                    <!-- Texto alternativo para móvil (antes: .mobile-quote) -->
+                    <div class="frase-movil">
+                        <h1 class="display-4 mb-4">
+                            La verdadera Fuerza no se mide en kilos...
+                        </h1>
+                        <p class="lead text-gold-flat mb-4" style="font-weight: 700; font-size: 1.5rem;">
+                            ...se mide en años de salud.
+                        </p>
+                    </div>
+
+                </div>
+
+                <div class="col-lg-5 offset-lg-1">
+                    <!-- Tarjeta con formulario: `card` y `card-body` son componentes de Bootstrap.
+                         `card-form` es una clase personalizada que añade fondo, borde y gradiente superior. -->
+                    <div class="card card-form p-4">
+                        <div class="card-body">
+                            <h3 class="text-center mb-4 text-uppercase">
+                                <!-- `text-center` y `text-uppercase` son utilidades de Bootstrap. -->
+                                <span class="text-gold-gradient">Tu Primera Prueba Gratis</span>
+                            </h3>
+
+                            <!-- Formulario simple usando clases de formulario de Bootstrap -->
+                            <form>
+                                <!-- `mb-3` es utilidad Bootstrap para margin-bottom -->
+                                <div class="mb-3">
+                                    <!-- `form-label` es Bootstrap; `text-secondary` y `small` también. -->
+                                    <label for="nombre" class="form-label text-secondary small">NOMBRE</label>
+                                    <!-- `form-control` es la clase Bootstrap que da estilo a inputs. -->
+                                    <input type="text" class="form-control" id="nombre" placeholder="Tu nombre">
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="email" class="form-label text-secondary small">CORREO</label>
+                                    <input type="email" class="form-control" id="email"
+                                        placeholder="tucorreo@ejemplo.com">
+                                </div>
+
+                                <div class="mb-4">
+                                    <label for="objetivos" class="form-label text-secondary small">¿QUÉ QUIERES
+                                        ENTRENAR?</label>
+                                    <!-- `form-select` es la clase Bootstrap para selects con estilo. -->
+                                    <select class="form-select" id="objetivos">
+                                        <option value="" selected disabled>Elige tu disciplina...</option>
+                                        <option value="funcional">Entrenamiento Funcional</option>
+                                        <option value="boxeo">Boxeo / Kickboxing</option>
+                                        <option value="pilates">Pilates / Movilidad</option>
+                                        <option value="otro">Quiero asesoramiento general</option>
+                                    </select>
+                                </div>
+
+                                <!-- `btn` es clase Bootstrap base; `btn-gold` es personalizada para el gradiente. -->
+                                <button type="submit" class="btn btn-gold">
+                                    RESERVAR CLASE
+                                </button>
+
+                                <!-- Botón para crear cuenta: abre el formulario de registro (no es un login) -->
+                                <div class="text-center mt-3">
+                                    <button type="button" class="btn btn-link create-account-btn" id="abrirRegistro">
+                                        o si lo prefieres, crea tu cuenta
+                                    </button>
+                                </div>
+
+                                <p class="text-center mt-3 small text-secondary" style="font-size: 0.8rem;">
+                                    *Únete a la forja. Plazas limitadas.
+                                </p>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- Formulario de registro (overlay). Se muestra/oculta con JS. -->
+    <div id="overlayRegistro" class="register-overlay" aria-hidden="true">
+        <div class="register-card card card-form p-4">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4 class="mb-0">Crear tu cuenta</h4>
+                    <button type="button" class="btn-close btn-close-white" id="cerrarRegistro"
+                        aria-label="Cerrar"></button>
+                </div>
+
+                <!-- Formulario de registro (campos extendidos). Evita el flujo de "login" solicitado. -->
+                <form id="formularioRegistro">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="reg-nombre" class="form-label small text-secondary">Nombre</label>
+                            <input id="reg-nombre" type="text" class="form-control" name="nombre"
+                                placeholder="Tu nombre" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="reg-apellidos" class="form-label small text-secondary">Apellidos</label>
+                            <input id="reg-apellidos" type="text" class="form-control" name="apellidos"
+                                placeholder="Tus apellidos">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="reg-email" class="form-label small text-secondary">Correo electrónico</label>
+                        <input id="reg-email" type="email" class="form-control" name="email"
+                            placeholder="tucorreo@ejemplo.com" required>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="reg-password" class="form-label small text-secondary">Contraseña</label>
+                            <input id="reg-password" type="password" class="form-control" name="password" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="reg-password-confirm" class="form-label small text-secondary">Confirmar
+                                contraseña</label>
+                            <input id="reg-password-confirm" type="password" class="form-control"
+                                name="password_confirm" required>
+                        </div>
+                    </div>
+
+                    <!-- Indicador de criterios de contraseña (actualizado en tiempo real) -->
+                    <div class="mb-2">
+                        <small class="text-secondary">Tu contraseña debe tener mínimo 8 caracteres y además al menos uno
+                            de:</small>
+                        <ul id="validacionesPW" class="mb-2"
+                            style="list-style:none; padding-left:0; margin-bottom:0.5rem;">
+                            <li data-crit="length" class="text-danger">• Al menos 8 caracteres</li>
+                            <li data-crit="lower" class="text-danger">• Una minúscula</li>
+                            <li data-crit="upper" class="text-danger">• Una mayúscula</li>
+                            <li data-crit="number" class="text-danger">• Un número</li>
+                            <li data-crit="symbol" class="text-danger">• Un símbolo (ej. !@#$%)</li>
+                        </ul>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="reg-telefono" class="form-label small text-secondary">Teléfono
+                                (opcional)</label>
+                            <input id="reg-telefono" type="tel" class="form-control" name="telefono"
+                                placeholder="+34 600 000 000">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="reg-nacimiento" class="form-label small text-secondary">Fecha de
+                                nacimiento</label>
+                            <input id="reg-nacimiento" type="date" class="form-control" name="nacimiento">
+                        </div>
+                    </div>
+
+                    <!-- Opciones/disciplinas: seguir estilo del select existente, pero como checkboxes para permitir múltiples selecciones -->
+                    <div class="mb-3">
+                        <label class="form-label small text-secondary">¿Qué disciplinas te interesan?</label>
+                        <div class="d-flex flex-wrap gap-2">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" value="funcional" id="chkFuncional"
+                                    name="disciplina">
+                                <label class="form-check-label small text-secondary" for="chkFuncional">Entrenamiento
+                                    Funcional</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" value="boxeo" id="chkBoxeo"
+                                    name="disciplina">
+                                <label class="form-check-label small text-secondary" for="chkBoxeo">Boxeo /
+                                    Kickboxing</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" value="pilates" id="chkPilates"
+                                    name="disciplina">
+                                <label class="form-check-label small text-secondary" for="chkPilates">Pilates /
+                                    Movilidad</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" value="otro" id="chkOtro"
+                                    name="disciplina">
+                                <label class="form-check-label small text-secondary" for="chkOtro">Asesoramiento
+                                    general</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="terms" required>
+                        <label class="form-check-label small text-secondary" for="terms">Acepto los términos y
+                            condiciones</label>
+                    </div>
+
+                    <!-- Checkbox para notificaciones-->
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="notify">
+                        <label class="form-check-label small text-secondary" for="notify">Quiero recibir
+                            notificaciones</label>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-gold">Crear cuenta</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="cart-floating-btn" data-bs-toggle="offcanvas" data-bs-target="#cartOffcanvas" style="display:none;">
+        <div class="cart-icon-wrapper">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-cart3"
+                viewBox="0 0 16 16">
+                <path
+                    d="M0 1.5A.5.5 0 0 1 .5 1H2a.5.5 0 0 1 .485.379L2.89 3H14.5a.5.5 0 0 1 .49.598l-1 5a.5.5 0 0 1-.465.401l-9.397.472L4.415 11H13a.5.5 0 0 1 0 1H4a.5.5 0 0 1-.491-.408L2.01 3.607 1.61 2H.5a.5.5 0 0 1-.5-.5M3.102 4l.84 4.479 9.144-.459L13.89 4zM5 12a2 2 0 1 0 0 4 2 2 0 0 0 0-4m7 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4m-7 1a1 1 0 1 1 0 2 1 1 0 0 1 0-2m7 1a1 1 0 1 1 0 2 1 1 0 0 1 0-2" />
+            </svg>
+            <span class="cart-badge" id="cart-count">0</span>
+        </div>
+    </div>
+
+    <div class="offcanvas offcanvas-end bg-dark text-white border-gold-left" tabindex="-1" id="cartOffcanvas" style="display:none;">
+        <div class="offcanvas-header border-bottom border-secondary">
+            <h5 class="offcanvas-title text-gold-gradient fw-bold">TU CESTA DE ENTRENAMIENTO</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"
+                aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+            <div id="cart-items-container">
+                <p class="text-center text-secondary py-5">Tu cesta está vacía. ¡Empieza a forjar tu destino!</p>
+            </div>
+            <hr class="border-secondary">
+            <div class="d-flex justify-content-between mb-4">
+                <span class="fw-bold">TOTAL:</span>
+                <span class="text-gold-flat fw-bold" id="cart-total">0.00€</span>
+            </div>
+            <button class="btn btn-gold w-100 py-3 fw-bold">FINALIZAR COMPRA</button>
+        </div>
+    </div>
+
+    <!-- External JS: validaciones.js maneja validación del formulario y control del overlay -->
+    <script type="module" src="js/validaciones.js"></script>
+    <script src="js/carrito.js"></script>
+    <!-- Bootstrap JS (external CDN) - necesario para componentes interactivos como el offcanvas -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acceso - Athlos Forge by Sebas</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .auth-page {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            padding-top: 80px;
+            background: radial-gradient(circle at 30% 50%, rgba(212, 175, 55, 0.08) 0%, rgba(0, 0, 0, 0) 60%),
+                linear-gradient(180deg, rgba(0, 0, 0, 0.7) 0%, rgba(5, 5, 5, 1) 100%);
+        }
+
+        .auth-container {
+            max-width: 500px;
+        }
+
+        .auth-card {
+            background-color: var(--card-bg);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+        }
+
+        .tab-nav {
+            border-bottom: 2px solid rgba(212, 175, 55, 0.2);
+        }
+
+        .tab-nav .nav-link {
+            color: var(--text-color);
+            border: none;
+            position: relative;
+            padding-bottom: 10px;
+        }
+
+        .tab-nav .nav-link.active {
+            color: var(--gold-color);
+            background: none;
+            border: none;
+        }
+
+        .tab-nav .nav-link.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--gold-color);
+        }
+
+        .password-strength {
+            height: 5px;
+            border-radius: 3px;
+            margin-top: 5px;
+            background: #2a2a2a;
+        }
+
+        .password-strength.weak {
+            background: #dc3545;
+        }
+
+        .password-strength.medium {
+            background: #ffc107;
+        }
+
+        .password-strength.strong {
+            background: #28a745;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- NAVEGACIÓN -->
+    <nav class="navbar navbar-dark navbar-expand-lg fixed-top">
+        <div class="container-fluid d-flex justify-content-between align-items-center ps-3 pe-3">
+            <a class="navbar-brand d-flex align-items-center" href="index.html">
+                <img src="img/logo-athlos.png" alt="Athlos Forge Logo">
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav mx-auto gap-4">
+                    <li class="nav-item">
+                        <a class="nav-link text-white fw-bold" href="index.html">Inicio</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white fw-bold" href="entrenamientos.html">Entrenamientos</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white fw-bold" href="blog.html">Blog</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white fw-bold" href="opiniones.html">Opiniones</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- PÁGINA DE AUTENTICACIÓN -->
+    <section class="auth-page">
+        <div class="container">
+            <div class="auth-container mx-auto">
+                <div class="card auth-card p-4">
+                    <!-- TAB NAVIGATION -->
+                    <ul class="nav tab-nav mb-4" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active fw-bold" id="login-tab" data-bs-toggle="tab" data-bs-target="#login" type="button" role="tab">Iniciar Sesión</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link fw-bold" id="register-tab" data-bs-toggle="tab" data-bs-target="#register" type="button" role="tab">Crear Cuenta</button>
+                        </li>
+                    </ul>
+
+                    <!-- TAB CONTENT -->
+                    <div class="tab-content">
+                        <!-- PESTAÑA: INICIAR SESIÓN -->
+                        <div class="tab-pane fade show active" id="login" role="tabpanel">
+                            <form id="loginForm">
+                                <div class="mb-3">
+                                    <label for="loginEmail" class="form-label small text-secondary text-uppercase">Correo Electrónico</label>
+                                    <input type="email" class="form-control" id="loginEmail" placeholder="tu@email.com" required>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="loginPassword" class="form-label small text-secondary text-uppercase">Contraseña</label>
+                                    <input type="password" class="form-control" id="loginPassword" placeholder="••••••••" required>
+                                </div>
+
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="rememberMe">
+                                    <label class="form-check-label small text-secondary" for="rememberMe">
+                                        Recuérdame
+                                    </label>
+                                </div>
+
+                                <div id="loginAlert" class="alert alert-danger d-none" role="alert"></div>
+
+                                <button type="submit" class="btn btn-gold w-100 py-2 fw-bold mb-3">INICIAR SESIÓN</button>
+
+                                <div class="text-center">
+                                    <a href="#" class="text-decoration-none text-gold-flat small">¿Olvidaste tu contraseña?</a>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- PESTAÑA: CREAR CUENTA -->
+                        <div class="tab-pane fade" id="register" role="tabpanel">
+                            <form id="registerForm">
+                                <!-- NOMBRE Y APELLIDOS -->
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="regNombre" class="form-label small text-secondary text-uppercase">Nombre</label>
+                                        <input type="text" class="form-control" id="regNombre" placeholder="Juan" required>
+                                        <small class="text-danger d-none" id="nombreError"></small>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="regApellidos" class="form-label small text-secondary text-uppercase">Apellidos</label>
+                                        <input type="text" class="form-control" id="regApellidos" placeholder="García López" required>
+                                        <small class="text-danger d-none" id="apellidosError"></small>
+                                    </div>
+                                </div>
+
+                                <!-- EMAIL -->
+                                <div class="mb-3">
+                                    <label for="regEmail" class="form-label small text-secondary text-uppercase">Correo Electrónico</label>
+                                    <input type="email" class="form-control" id="regEmail" placeholder="tu@email.com" required>
+                                    <small class="text-danger d-none" id="emailError"></small>
+                                </div>
+
+                                <!-- CONTRASEÑA -->
+                                <div class="mb-3">
+                                    <label for="regPassword" class="form-label small text-secondary text-uppercase">Contraseña</label>
+                                    <input type="password" class="form-control" id="regPassword" placeholder="Mín. 8 caracteres" required>
+                                    <div class="password-strength" id="passwordStrength"></div>
+                                    <small class="text-danger d-none" id="passwordError"></small>
+                                </div>
+
+                                <!-- CRITERIOS DE CONTRASEÑA -->
+                                <div class="mb-3">
+                                    <small class="text-secondary d-block mb-2">Tu contraseña debe cumplir:</small>
+                                    <ul id="pwValidation" class="list-unstyled small" style="padding-left: 0;">
+                                        <li data-rule="length" class="text-danger"><i class="bi bi-x-circle"></i> Mínimo 8 caracteres</li>
+                                        <li data-rule="lower" class="text-danger"><i class="bi bi-x-circle"></i> Una minúscula</li>
+                                        <li data-rule="upper" class="text-danger"><i class="bi bi-x-circle"></i> Una mayúscula</li>
+                                        <li data-rule="number" class="text-danger"><i class="bi bi-x-circle"></i> Un número</li>
+                                        <li data-rule="symbol" class="text-danger"><i class="bi bi-x-circle"></i> Un símbolo (!@#$%)</li>
+                                    </ul>
+                                </div>
+
+                                <!-- CONFIRMAR CONTRASEÑA -->
+                                <div class="mb-3">
+                                    <label for="regPasswordConfirm" class="form-label small text-secondary text-uppercase">Confirmar Contraseña</label>
+                                    <input type="password" class="form-control" id="regPasswordConfirm" placeholder="Repite tu contraseña" required>
+                                    <small class="text-danger d-none" id="passwordConfirmError"></small>
+                                </div>
+
+                                <!-- GÉNERO -->
+                                <div class="mb-3">
+                                    <label class="form-label small text-secondary text-uppercase">Género</label>
+                                    <select class="form-select" id="regGenero" required>
+                                        <option value="">Selecciona tu género</option>
+                                        <option value="masculino">Masculino</option>
+                                        <option value="femenino">Femenino</option>
+                                        <option value="otros">Otros</option>
+                                    </select>
+                                </div>
+
+                                <!-- FECHA DE NACIMIENTO -->
+                                <div class="mb-3">
+                                    <label for="regFechaNacimiento" class="form-label small text-secondary text-uppercase">Fecha de Nacimiento</label>
+                                    <input type="date" class="form-control" id="regFechaNacimiento" required>
+                                </div>
+
+                                <!-- DIRECCIÓN -->
+                                <div class="mb-3">
+                                    <label for="regDireccion" class="form-label small text-secondary text-uppercase">Dirección</label>
+                                    <input type="text" class="form-control" id="regDireccion" placeholder="Calle Principal, 123" required>
+                                </div>
+
+                                <!-- PAÍS -->
+                                <div class="mb-3">
+                                    <label for="regPais" class="form-label small text-secondary text-uppercase">País</label>
+                                    <input type="text" class="form-control" id="regPais" placeholder="España" required>
+                                </div>
+
+                                <!-- TARJETA (Solo visible si tiene dirección y país) -->
+                                <div id="tarjetaGroup" class="mb-3 d-none">
+                                    <label for="regTarjeta" class="form-label small text-secondary text-uppercase">Tarjeta de Crédito (Opcional)</label>
+                                    <input type="text" class="form-control" id="regTarjeta" placeholder="1234 5678 9012 3456">
+                                    <small class="text-danger d-none" id="tarjetaError"></small>
+                                </div>
+
+                                <!-- NOTIFICACIONES -->
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="regNotificaciones">
+                                    <label class="form-check-label small text-secondary" for="regNotificaciones">
+                                        Quiero recibir notificaciones
+                                    </label>
+                                </div>
+
+                                <!-- TÉRMINOS -->
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="regTerminos" required>
+                                    <label class="form-check-label small text-secondary" for="regTerminos">
+                                        Acepto los términos y condiciones
+                                    </label>
+                                </div>
+
+                                <div id="registerAlert" class="alert alert-danger d-none" role="alert"></div>
+
+                                <button type="submit" class="btn btn-gold w-100 py-2 fw-bold">CREAR CUENTA</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SCRIPTS -->
+    <script src="js/autenticacion.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

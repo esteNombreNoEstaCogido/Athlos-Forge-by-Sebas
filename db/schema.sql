@@ -1,0 +1,362 @@
+-- ============================================
+-- SCRIPT DE BASE DE DATOS - Athlos Forge
+-- ============================================
+-- Este script crea todas las tablas necesarias para
+-- el funcionamiento de la plataforma de entrenamientos
+
+-- Crear base de datos
+CREATE DATABASE IF NOT EXISTS athlos_forge;
+USE athlos_forge;
+
+-- ============================================
+-- TABLA: USUARIOS
+-- ============================================
+-- Almacena información de usuarios registrados
+CREATE TABLE usuarios (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    nombre VARCHAR(100) NOT NULL COMMENT 'Máximo dos palabras',
+    apellidos VARCHAR(100) NOT NULL COMMENT 'Máximo dos palabras',
+    email VARCHAR(120) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL COMMENT 'Hash bcrypt',
+    rol ENUM('cliente', 'administrador') DEFAULT 'cliente',
+    genero ENUM('masculino', 'femenino', 'otros') NOT NULL,
+    fecha_nacimiento DATE NOT NULL,
+    direccion VARCHAR(200) NOT NULL,
+    pais VARCHAR(100) NOT NULL,
+    tarjeta_credito VARCHAR(20) COMMENT 'Opcional, encriptada en producción',
+    telefono VARCHAR(20),
+    notificaciones BOOLEAN DEFAULT FALSE,
+    estado ENUM('activo', 'inactivo', 'bloqueado') DEFAULT 'activo',
+    fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    fecha_ultima_sesion DATETIME,
+    INDEX idx_email (email),
+    INDEX idx_estado (estado)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================
+-- TABLA: CATEGORÍAS
+-- ============================================
+-- Categorización de entrenamientos
+CREATE TABLE categorias (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    nombre VARCHAR(100) UNIQUE NOT NULL,
+    descripcion TEXT,
+    imagen_url VARCHAR(255),
+    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================
+-- TABLA: ARTÍCULOS / ENTRENAMIENTOS
+-- ============================================
+-- Productos de entrenamiento disponibles
+CREATE TABLE articulos (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    nombre VARCHAR(150) NOT NULL,
+    descripcion TEXT,
+    precio DECIMAL(10, 2) NOT NULL,
+    stock INT NOT NULL DEFAULT 0,
+    id_categoria INT NOT NULL,
+    imagen_url VARCHAR(255),
+    disponible BOOLEAN DEFAULT TRUE,
+    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_categoria) REFERENCES categorias(id) ON DELETE CASCADE,
+    INDEX idx_categoria (id_categoria),
+    INDEX idx_disponible (disponible),
+    INDEX idx_precio (precio)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================
+-- TABLA: PEDIDOS
+-- ============================================
+-- Registra los pedidos realizados por usuarios
+CREATE TABLE pedidos (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    id_usuario INT NOT NULL,
+    numero_pedido VARCHAR(20) UNIQUE NOT NULL,
+    fecha_pedido TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    estado ENUM('pendiente', 'confirmado', 'enviado', 'entregado', 'cancelado') DEFAULT 'pendiente',
+    total DECIMAL(10, 2) NOT NULL,
+    direccion_envio VARCHAR(200),
+    fecha_entrega_estimada DATE,
+    fecha_entrega_real DATE,
+    notas TEXT,
+    FOREIGN KEY (id_usuario) REFERENCES usuarios(id) ON DELETE CASCADE,
+    INDEX idx_usuario (id_usuario),
+    INDEX idx_estado (estado),
+    INDEX idx_fecha (fecha_pedido)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================
+-- TABLA: DETALLE_PEDIDO
+-- ============================================
+-- Detalles de los artículos en cada pedido
+CREATE TABLE detalle_pedido (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    id_pedido INT NOT NULL,
+    id_articulo INT NOT NULL,
+    cantidad INT NOT NULL DEFAULT 1,
+    precio_unitario DECIMAL(10, 2) NOT NULL,
+    subtotal DECIMAL(10, 2) NOT NULL,
+    FOREIGN KEY (id_pedido) REFERENCES pedidos(id) ON DELETE CASCADE,
+    FOREIGN KEY (id_articulo) REFERENCES articulos(id) ON DELETE RESTRICT,
+    INDEX idx_pedido (id_pedido),
+    INDEX idx_articulo (id_articulo)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================
+-- TABLA: CARRITO_SESION
+-- ============================================
+-- Almacena carritos temporales de usuarios
+CREATE TABLE carrito_sesion (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    id_usuario INT,
+    token_sesion VARCHAR(100) UNIQUE,
+    id_articulo INT NOT NULL,
+    cantidad INT NOT NULL DEFAULT 1,
+    precio_unitario DECIMAL(10, 2) NOT NULL,
+    fecha_agregado TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_usuario) REFERENCES usuarios(id) ON DELETE CASCADE,
+    FOREIGN KEY (id_articulo) REFERENCES articulos(id) ON DELETE CASCADE,
+    INDEX idx_usuario (id_usuario),
+    INDEX idx_token (token_sesion)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================
+-- TABLA: MOVIMIENTO_STOCK
+-- ============================================
+-- Auditoría de cambios en el stock
+CREATE TABLE movimiento_stock (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    id_articulo INT NOT NULL,
+    cantidad_anterior INT,
+    cantidad_nueva INT,
+    tipo_movimiento ENUM('entrada', 'salida', 'ajuste') NOT NULL,
+    motivo VARCHAR(200),
+    usuario_responsable INT,
+    fecha_movimiento TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_articulo) REFERENCES articulos(id) ON DELETE CASCADE,
+    FOREIGN KEY (usuario_responsable) REFERENCES usuarios(id) ON DELETE SET NULL,
+    INDEX idx_articulo (id_articulo),
+    INDEX idx_fecha (fecha_movimiento)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================
+-- TABLA: OPINIONES / RESEÑAS
+-- ============================================
+-- Reseñas de usuarios sobre entrenamientos
+CREATE TABLE opiniones (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    id_usuario INT NOT NULL,
+    id_articulo INT NOT NULL,
+    calificacion INT NOT NULL COMMENT 'Del 1 al 5',
+    comentario TEXT,
+    fecha_resena TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    estado ENUM('aprobada', 'pendiente', 'rechazada') DEFAULT 'pendiente',
+    FOREIGN KEY (id_usuario) REFERENCES usuarios(id) ON DELETE CASCADE,
+    FOREIGN KEY (id_articulo) REFERENCES articulos(id) ON DELETE CASCADE,
+    INDEX idx_usuario (id_usuario),
+    INDEX idx_articulo (id_articulo),
+    INDEX idx_estado (estado),
+    UNIQUE KEY unique_resena (id_usuario, id_articulo)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================
+-- TABLA: NOTIFICACIONES
+-- ============================================
+-- Registro de notificaciones enviadas a usuarios
+CREATE TABLE notificaciones (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    id_usuario INT NOT NULL,
+    tipo ENUM('pedido', 'oferta', 'revista', 'sistema') DEFAULT 'sistema',
+    asunto VARCHAR(200) NOT NULL,
+    contenido TEXT NOT NULL,
+    leida BOOLEAN DEFAULT FALSE,
+    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_usuario) REFERENCES usuarios(id) ON DELETE CASCADE,
+    INDEX idx_usuario (id_usuario),
+    INDEX idx_leida (leida)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================
+-- TABLA: REVISTA_DIGITAL
+-- ============================================
+-- Registro de envíos de revista digital
+CREATE TABLE revista_digital (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    id_usuario INT NOT NULL,
+    numero INT NOT NULL,
+    mes INT NOT NULL,
+    anno INT NOT NULL,
+    fecha_envio DATE NOT NULL,
+    contenido TEXT,
+    abierta BOOLEAN DEFAULT FALSE,
+    FOREIGN KEY (id_usuario) REFERENCES usuarios(id) ON DELETE CASCADE,
+    INDEX idx_usuario (id_usuario),
+    INDEX idx_fecha (fecha_envio),
+    UNIQUE KEY unique_revista (id_usuario, mes, anno)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================
+-- TABLA: LOGS_SISTEMA
+-- ============================================
+-- Auditoría de actividades importantes
+CREATE TABLE logs_sistema (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    tipo_accion VARCHAR(100) NOT NULL,
+    id_usuario INT,
+    descripcion TEXT,
+    ip_address VARCHAR(45),
+    user_agent TEXT,
+    fecha_accion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_usuario) REFERENCES usuarios(id) ON DELETE SET NULL,
+    INDEX idx_tipo (tipo_accion),
+    INDEX idx_usuario (id_usuario),
+    INDEX idx_fecha (fecha_accion)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================
+-- INSERCIONES DE DATOS INICIALES
+-- ============================================
+
+-- Insertar categorías
+INSERT INTO categorias (nombre, descripcion) VALUES
+('Funcional', 'Entrenamientos que mejoran tu resistencia y fuerza general'),
+('Boxeo', 'Clases de boxeo y kickboxing con técnicas profesionales'),
+('Pilates', 'Mejora tu flexibilidad y fortalece tu core'),
+('Asesoramiento', 'Consultas personalizadas de nutrición y entrenamiento');
+
+-- Insertar artículos de ejemplo
+INSERT INTO articulos (nombre, descripcion, precio, stock, id_categoria, disponible) VALUES
+('Entrenamiento Funcional - 1 Sesión', 'Una sesión completa de entrenamiento funcional', 50.00, 100, 1, TRUE),
+('Boxeo - 1 Sesión', 'Clase de boxeo con instrucciones profesionales', 60.00, 80, 2, TRUE),
+('Pilates - 1 Sesión', 'Sesión de pilates y movilidad', 45.00, 90, 3, TRUE),
+('Paquete Completo', 'Acceso a todos los entrenamientos por un mes', 120.00, 50, 4, TRUE),
+('Asesoramiento Personalizado', 'Consulta 1 a 1 con el entrenador', 80.00, 30, 4, TRUE);
+
+-- Crear usuario administrador de prueba (contraseña: Admin123!)
+-- En producción, usar un hash bcrypt adecuado
+INSERT INTO usuarios (nombre, apellidos, email, password, rol, genero, fecha_nacimiento, direccion, pais, estado) VALUES
+('Admin', 'Sistema', 'admin@athlosforge.com', '$2y$10$EaJTL7G1sQqYPfj5FVX7XeOJmLxDl8MX.KxG9JR7lCrQ9F3JvQkYO', 'administrador', 'masculino', '1990-01-01', 'Calle Admin, 1', 'España', 'activo');
+
+-- ============================================
+-- PROCEDIMIENTOS ALMACENADOS
+-- ============================================
+
+-- Procedimiento para registrar un nuevo usuario
+DELIMITER //
+CREATE PROCEDURE sp_registrar_usuario(
+    IN p_nombre VARCHAR(100),
+    IN p_apellidos VARCHAR(100),
+    IN p_email VARCHAR(120),
+    IN p_password VARCHAR(255),
+    IN p_genero VARCHAR(50),
+    IN p_fecha_nacimiento DATE,
+    IN p_direccion VARCHAR(200),
+    IN p_pais VARCHAR(100),
+    IN p_tarjeta VARCHAR(20),
+    IN p_notificaciones BOOLEAN,
+    IN p_revista BOOLEAN,
+    OUT p_id INT,
+    OUT p_success BOOLEAN,
+    OUT p_mensaje VARCHAR(255)
+)
+BEGIN
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        SET p_success = FALSE;
+        SET p_mensaje = 'Error en la base de datos';
+    END;
+
+    IF EXISTS (SELECT id FROM usuarios WHERE email = p_email) THEN
+        SET p_success = FALSE;
+        SET p_mensaje = 'El correo ya está registrado';
+    ELSE
+        INSERT INTO usuarios (
+            nombre, apellidos, email, password, genero,
+            fecha_nacimiento, direccion, pais, tarjeta_credito,
+            notificaciones, revista_digital
+        ) VALUES (
+            p_nombre, p_apellidos, p_email, p_password, p_genero,
+            p_fecha_nacimiento, p_direccion, p_pais, p_tarjeta,
+            p_notificaciones, p_revista
+        );
+        
+        SET p_id = LAST_INSERT_ID();
+        SET p_success = TRUE;
+        SET p_mensaje = 'Usuario registrado exitosamente';
+    END IF;
+END //
+DELIMITER ;
+
+-- Procedimiento para crear un pedido
+DELIMITER //
+CREATE PROCEDURE sp_crear_pedido(
+    IN p_id_usuario INT,
+    IN p_total DECIMAL(10,2),
+    OUT p_id_pedido INT,
+    OUT p_numero_pedido VARCHAR(20),
+    OUT p_success BOOLEAN
+)
+BEGIN
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        SET p_success = FALSE;
+    END;
+
+    SET p_numero_pedido = CONCAT('PED-', DATE_FORMAT(NOW(), '%Y%m%d%H%i%s'));
+    
+    INSERT INTO pedidos (id_usuario, numero_pedido, total, estado)
+    VALUES (p_id_usuario, p_numero_pedido, p_total, 'pendiente');
+    
+    SET p_id_pedido = LAST_INSERT_ID();
+    SET p_success = TRUE;
+END //
+DELIMITER ;
+
+-- ============================================
+-- VISTAS ÚTILES
+-- ============================================
+
+-- Vista: Resumen de ventas por categoría
+CREATE VIEW v_ventas_por_categoria AS
+SELECT 
+    c.nombre AS categoria,
+    COUNT(DISTINCT p.id) AS total_pedidos,
+    SUM(dp.cantidad) AS cantidad_vendida,
+    SUM(dp.subtotal) AS ingresos_totales
+FROM categorias c
+LEFT JOIN articulos a ON c.id = a.id_categoria
+LEFT JOIN detalle_pedido dp ON a.id = dp.id_articulo
+LEFT JOIN pedidos p ON dp.id_pedido = p.id AND p.estado NOT IN ('cancelado', 'pendiente')
+GROUP BY c.id, c.nombre;
+
+-- Vista: Clientes más activos
+CREATE VIEW v_clientes_activos AS
+SELECT 
+    u.id,
+    u.nombre,
+    u.apellidos,
+    u.email,
+    COUNT(DISTINCT p.id) AS total_pedidos,
+    SUM(p.total) AS gasto_total,
+    MAX(p.fecha_pedido) AS ultima_compra
+FROM usuarios u
+LEFT JOIN pedidos p ON u.id = p.id_usuario AND p.estado != 'cancelado'
+WHERE u.estado = 'activo' AND u.rol = 'cliente'
+GROUP BY u.id, u.nombre, u.apellidos, u.email
+ORDER BY gasto_total DESC;
+
+-- Vista: Stock bajo
+CREATE VIEW v_stock_bajo AS
+SELECT 
+    id,
+    nombre,
+    stock,
+    precio,
+    id_categoria
+FROM articulos
+WHERE stock <= 10 AND disponible = TRUE
+ORDER BY stock ASC;
+
+COMMIT;

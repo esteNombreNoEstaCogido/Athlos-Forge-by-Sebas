@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Entrenamientos - Athlos Forge by Sebas</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+    <!-- NAVEGACIÓN -->
+    <nav class="navbar navbar-dark navbar-expand-lg fixed-top">
+        <div class="container-fluid d-flex justify-content-between align-items-center ps-3 pe-3">
+            <a class="navbar-brand d-flex align-items-center" href="index.html">
+                <img src="img/logo-athlos.png" alt="Athlos Forge Logo">
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav mx-auto gap-4">
+                    <li class="nav-item">
+                        <a class="nav-link text-white fw-bold" href="index.html">Inicio</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active text-gold-flat fw-bold" href="entrenamientos.html">Entrenamientos</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white fw-bold" href="blog.html">Blog</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white fw-bold" href="opiniones.html">Opiniones</a>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="ms-auto d-flex align-items-center gap-3">
+                <span class="text-gold-flat fw-bold" id="userGreeting" style="display: none; white-space: nowrap;"></span>
+                <button class="btn btn-gold-navbar text-white fw-bold" id="loginNavItem" onclick="window.location.href='login.html'" style="padding: 10px 25px; font-size: 0.9rem;">Acceder</button>
+                <button class="btn btn-danger fw-bold" id="logoutNavItem" onclick="logout()" style="display: none; padding: 10px 25px; font-size: 0.9rem;">Salir</button>
+            </div>
+        </div>
+    </nav>
+
+    <script>
+        function checkUserLogin() {
+            const usuario = localStorage.getItem('usuario');
+            if (usuario) {
+                const user = JSON.parse(usuario);
+                document.getElementById('userGreeting').textContent = 'Bienvenido ' + user.nombre;
+                document.getElementById('userGreeting').style.display = 'block';
+                document.getElementById('loginNavItem').style.display = 'none';
+                document.getElementById('logoutNavItem').style.display = 'block';
+            }
+        }
+        
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('usuario');
+            document.getElementById('userGreeting').style.display = 'none';
+            document.getElementById('loginNavItem').style.display = 'block';
+            document.getElementById('logoutNavItem').style.display = 'none';
+            window.location.reload();
+        }
+        
+        checkUserLogin();
+    </script>
+
+    <!-- SECCIÓN PRINCIPAL -->
+    <section class="entrenamientos-section">
+        <div class="container py-5">
+            <h1 class="text-center mb-5 mt-5">
+                Nuestros <span class="text-gold-gradient">Entrenamientos</span>
+            </h1>
+
+            <!-- GRID DE ENTRENAMIENTOS -->
+            <div class="row g-4 mb-5">
+                <!-- ENTRENAMIENTO 1: Funcional -->
+                <div class="col-md-6 col-lg-3">
+                    <div class="card h-100 training-card border-0">
+                        <div class="training-image" style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); height: 250px; display: flex; align-items: center; justify-content: center;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" fill="#D4AF37" viewBox="0 0 16 16">
+                                <path d="M6.5 1a.5.5 0 0 0-1 0v2h1V1zm3 0a.5.5 0 0 0-1 0v2h1V1zm1 3h-1v4h1V4z"/>
+                            </svg>
+                        </div>
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title text-gold-gradient mb-3">Entrenamiento Funcional</h5>
+                            <p class="card-text small text-secondary flex-grow-1">Mejora tu resistencia y fuerza con ejercicios dinámicos que fortalecen todo el cuerpo.</p>
+                            <div class="d-flex justify-content-between align-items-center mt-3">
+                                <span class="text-gold-flat fw-bold">50€</span>
+                                <button class="btn btn-sm btn-outline-warning" onclick="agregarAlCarrito('Entrenamiento Funcional', 50)">Agregar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ENTRENAMIENTO 2: Boxeo -->
+                <div class="col-md-6 col-lg-3">
+                    <div class="card h-100 training-card border-0">
+                        <div class="training-image" style="background: linear-gradient(135deg, #c41e3a 0%, #8b0000 100%); height: 250px; display: flex; align-items: center; justify-content: center;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" fill="#D4AF37" viewBox="0 0 16 16">
+                                <path d="M5.338 1.59a61.44 61.44 0 0 0-2.837.856.481.481 0 0 0-.328.39c-.045.1-.095.232-.151.381l-.852 4.561c-.073.39-.073.805.073 1.196l1.272 2.91a.5.5 0 0 0 .464.314l1.733-.122.584 1.953 5.332-1.226.584-1.954 1.733.123a.5.5 0 0 0 .464-.314l1.272-2.91c.146-.39.146-.806.073-1.196l-.852-4.561a.481.481 0 0 0-.328-.39c-.951-.3-1.918-.57-2.837-.856C9.335 1.582 8.907 1.5 8 1.5c-.907 0-1.335.082-2.662.59z"/>
+                            </svg>
+                        </div>
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title text-gold-gradient mb-3">Boxeo / Kickboxing</h5>
+                            <p class="card-text small text-secondary flex-grow-1">Aprende técnicas de defensa y ataque con profesionales certificados.</p>
+                            <div class="d-flex justify-content-between align-items-center mt-3">
+                                <span class="text-gold-flat fw-bold">60€</span>
+                                <button class="btn btn-sm btn-outline-warning" onclick="agregarAlCarrito('Boxeo / Kickboxing', 60)">Agregar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ENTRENAMIENTO 3: Pilates -->
+                <div class="col-md-6 col-lg-3">
+                    <div class="card h-100 training-card border-0">
+                        <div class="training-image" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); height: 250px; display: flex; align-items: center; justify-content: center;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" fill="#D4AF37" viewBox="0 0 16 16">
+                                <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+                            </svg>
+                        </div>
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title text-gold-gradient mb-3">Pilates / Movilidad</h5>
+                            <p class="card-text small text-secondary flex-grow-1">Aumenta tu flexibilidad y fortalece el core con movimientos controlados.</p>
+                            <div class="d-flex justify-content-between align-items-center mt-3">
+                                <span class="text-gold-flat fw-bold">45€</span>
+                                <button class="btn btn-sm btn-outline-warning" onclick="agregarAlCarrito('Pilates / Movilidad', 45)">Agregar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ENTRENAMIENTO 4: Paquete Completo -->
+                <div class="col-md-6 col-lg-3">
+                    <div class="card h-100 training-card border-0">
+                        <div class="training-image" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); height: 250px; display: flex; align-items: center; justify-content: center;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" fill="#D4AF37" viewBox="0 0 16 16">
+                                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                                <path d="M6.271 5.055a.5.5 0 0 1 .52.038l3.5 2.5a.5.5 0 0 1 0 .814l-3.5 2.5A.5.5 0 0 1 6 10.5v-5a.5.5 0 0 1 .271-.445z"/>
+                            </svg>
+                        </div>
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title text-gold-gradient mb-3">Paquete Completo</h5>
+                            <p class="card-text small text-secondary flex-grow-1">Acceso a todos los entrenamientos + asesoramiento personalizado.</p>
+                            <div class="d-flex justify-content-between align-items-center mt-3">
+                                <span class="text-gold-flat fw-bold">120€</span>
+                                <button class="btn btn-sm btn-outline-warning" onclick="agregarAlCarrito('Paquete Completo', 120)">Agregar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CARRITO FLOTANTE (Solo visible en esta página) -->
+    <div class="cart-floating-btn" data-bs-toggle="offcanvas" data-bs-target="#cartOffcanvas">
+        <div class="cart-icon-wrapper">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-cart3"
+                viewBox="0 0 16 16">
+                <path
+                    d="M0 1.5A.5.5 0 0 1 .5 1H2a.5.5 0 0 1 .485.379L2.89 3H14.5a.5.5 0 0 1 .49.598l-1 5a.5.5 0 0 1-.465.401l-9.397.472L4.415 11H13a.5.5 0 0 1 0 1H4a.5.5 0 0 1-.491-.408L2.01 3.607 1.61 2H.5a.5.5 0 0 1-.5-.5M3.102 4l.84 4.479 9.144-.459L13.89 4zM5 12a2 2 0 1 0 0 4 2 2 0 0 0 0-4m7 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4m-7 1a1 1 0 1 1 0 2 1 1 0 0 1 0-2m7 1a1 1 0 1 1 0 2 1 1 0 0 1 0-2" />
+            </svg>
+            <span class="cart-badge" id="cart-count">0</span>
+        </div>
+    </div>
+
+    <!-- PANEL CARRITO (Offcanvas) -->
+    <div class="offcanvas offcanvas-end bg-dark text-white border-gold-left" tabindex="-1" id="cartOffcanvas">
+        <div class="offcanvas-header border-bottom border-secondary">
+            <h5 class="offcanvas-title text-gold-gradient fw-bold">TU CESTA DE ENTRENAMIENTOS</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"
+                aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+            <div id="cart-items-container">
+                <p class="text-center text-secondary py-5">Tu cesta está vacía. ¡Elige tus entrenamientos!</p>
+            </div>
+            <hr class="border-secondary">
+            <div class="d-flex justify-content-between mb-4">
+                <span class="fw-bold">TOTAL:</span>
+                <span class="text-gold-flat fw-bold" id="cart-total">0.00€</span>
+            </div>
+            <button class="btn btn-gold w-100 py-3 fw-bold">FINALIZAR COMPRA</button>
+        </div>
+    </div>
+
+    <!-- SCRIPTS -->
+    <script src="js/carrito.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>
