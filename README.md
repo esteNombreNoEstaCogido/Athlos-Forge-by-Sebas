@@ -1,17 +1,17 @@
-# 💪 Athlos Forge by Sebastás
+# Athlos Forge by Sebas
 
 > Plataforma de entrenamientos online con autenticación, carrito de compra y búsqueda de entrenamientos.
 
 ---
 
-## 🔗 Enlaces Principales
+##  Enlaces Principales
 
-- **🌐 [Sitio en Vivo (GitHub Pages)](https://estenombrenoestacogido.github.io/Athlos-Forge-by-Sebas/)**
-- **📹 [Video Presentación](https://drive.google.com/file/d/1AYuFi687lVxGGldQcwQL-Dt1tFj2RAvF/view?usp=sharing)**
+- ** [Sitio en Vivo (GitHub Pages)](https://estenombrenoestacogido.github.io/Athlos-Forge-by-Sebas/)**
+- ** [Video Presentación](https://drive.google.com/file/d/1AYuFi687lVxGGldQcwQL-Dt1tFj2RAvF/view?usp=sharing)**
 
 ---
 
-## ✨ Características
+##  Características
 
 ✅ **Autenticación de Usuarios** - Registro e inicio de sesión  
 ✅ **Catálogo de Entrenamientos** - 8 tipos con descripción y precio  
@@ -130,21 +130,9 @@ Athlos Forge by Sebas/
 
 ## 👤 Autor
 
-**Sebastás** - Desarrollo Full Stack
-
----
-
-## 📄 Licencia
-
-MIT License - Ver detalles en el repositorio
-
----
-
-## 📞 Contacto
-
-Para dudas o sugerencias, contacta a través del sitio web o repositorio.
+**Sebas** - Desarrollo Full Stack
 
 ---
 
 **Última actualización:** 19 de marzo de 2026  
-**Estado:** ✅ En Producción
+
