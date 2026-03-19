@@ -226,6 +226,165 @@ h3 {
     color: #000 !important;
 }
 
+/* Estilos para el buscador */
+.btn-outline-gold-flat {
+    color: var(--gold-color) !important;
+    border: 1px solid var(--gold-color) !important;
+    background: transparent;
+    transition: all 0.3s ease;
+}
+
+.btn-outline-gold-flat:hover {
+    background: var(--gold-color) !important;
+    color: #000 !important;
+    box-shadow: 0 0 15px rgba(212, 175, 55, 0.5);
+}
+
+.navbar-search {
+    max-width: 320px;
+    gap: 0.5rem;
+    align-items: stretch;
+}
+
+.navbar-search input {
+    background: rgba(255, 255, 255, 0.08) !important;
+    border: 1px solid rgba(212, 175, 55, 0.4) !important;
+    color: #fff !important;
+    font-size: 0.85rem;
+    padding: 0.6rem 1rem !important;
+    border-radius: 0.35rem !important;
+    transition: all 0.3s ease;
+}
+
+.navbar-search input::placeholder {
+    color: rgba(255, 255, 255, 0.5) !important;
+}
+
+.navbar-search input:focus {
+    background: rgba(255, 255, 255, 0.12) !important;
+    border-color: var(--gold-color) !important;
+    box-shadow: 0 0 12px rgba(212, 175, 55, 0.25) !important;
+    outline: none;
+}
+
+.navbar-search .btn {
+    padding: 0.6rem 1.2rem !important;
+    font-size: 0.85rem;
+    white-space: nowrap;
+}
+
+@media (max-width: 992px) {
+    .navbar-search {
+        max-width: 100%;
+        margin-top: 1rem;
+        order: 3;
+        width: 100%;
+        flex-basis: 100%;
+    }
+    
+    .navbar-search input {
+        font-size: 0.9rem;
+    }
+}
+
+/* Buscador de entrenamientos en entrenamientos.html */
+#formBuscadorEntrenamientos {
+    background: linear-gradient(135deg, rgba(212, 175, 55, 0.08) 0%, rgba(212, 175, 55, 0.04) 100%);
+    padding: 1.5rem;
+    border-radius: 0.5rem;
+    border: 2px solid rgba(212, 175, 55, 0.2);
+    backdrop-filter: blur(10px);
+}
+
+#buscadorEntrenamientosInput {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border: 2px solid rgba(212, 175, 55, 0.3) !important;
+    color: #fff !important;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+#buscadorEntrenamientosInput::placeholder {
+    color: rgba(255, 255, 255, 0.4) !important;
+}
+
+#buscadorEntrenamientosInput:focus {
+    background: rgba(255, 255, 255, 0.08) !important;
+    border-color: var(--gold-color) !important;
+    box-shadow: 0 0 20px rgba(212, 175, 55, 0.3) !important;
+    color: #fff;
+}
+
+#formBuscadorEntrenamientos .btn-gold {
+    min-width: 120px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: all 0.3s ease;
+}
+
+#formBuscadorEntrenamientos .btn-secondary {
+    min-width: 120px;
+    background: rgba(108, 117, 125, 0.7) !important;
+    border: 1px solid rgba(212, 175, 55, 0.2) !important;
+}
+
+#formBuscadorEntrenamientos .btn-secondary:hover {
+    background: rgba(108, 117, 125, 0.9) !important;
+}
+
+#contadorResultados {
+    font-size: 0.95rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    min-height: 24px;
+}
+
+/* Sección de resultados de búsqueda */
+#seccionResultados {
+    border-top: 2px solid rgba(212, 175, 55, 0.3);
+    border-bottom: 2px solid rgba(212, 175, 55, 0.3);
+}
+
+#galeriaResultados .card {
+    border-color: rgba(212, 175, 55, 0.3) !important;
+    transition: all 0.3s ease;
+}
+
+#galeriaResultados .card:hover {
+    border-color: var(--gold-color) !important;
+    box-shadow: 0 0 20px rgba(212, 175, 55, 0.3) !important;
+}
+
+#galeriaResultados .badge {
+    background: var(--gold-color) !important;
+    color: #000 !important;
+    font-size: 0.75rem;
+}
+
+#galeriaResultados .btn-gold {
+    background: var(--gold-gradient);
+    color: #000 !important;
+    border: none;
+    font-weight: 700;
+    transition: all 0.3s ease;
+}
+
+#galeriaResultados .btn-gold:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 0 20px rgba(212, 175, 55, 0.5);
+}
+
+#galeriaResultados .btn-gold:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+#termiBuscado {
+    font-size: 1.1em;
+    font-style: italic;
+}
+
 .frase-ordenador {
 
     display: none;
@@ -533,6 +692,37 @@ h3 {
 
 .password-strength.strong {
     background: #28a745;
+}
+
+/* Estilos para mejorar visibilidad de placeholders */
+.form-control::placeholder,
+.form-select::placeholder {
+    color: #b0b0b0 !important;
+    opacity: 1 !important;
+}
+
+.form-control::-webkit-input-placeholder {
+    color: #b0b0b0 !important;
+    opacity: 1 !important;
+}
+
+.form-control::-moz-placeholder {
+    color: #b0b0b0 !important;
+    opacity: 1 !important;
+}
+
+.form-control:-ms-input-placeholder {
+    color: #b0b0b0 !important;
+    opacity: 1 !important;
+}
+
+/* Asegurar que el texto de los inputs sea visible */
+.form-control {
+    color: #ffffff !important;
+}
+
+.form-control::placeholder {
+    color: #cccccc !important;
 }
 
 /* Media Queries */

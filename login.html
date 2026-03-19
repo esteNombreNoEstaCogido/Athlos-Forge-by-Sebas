@@ -127,18 +127,18 @@
                         <div class="tab-pane fade show active" id="login" role="tabpanel">
                             <form id="loginForm">
                                 <div class="mb-3">
-                                    <label for="loginEmail" class="form-label small text-secondary text-uppercase">Correo Electrónico</label>
+                                    <label for="loginEmail" class="form-label small text-white text-uppercase">Correo Electrónico</label>
                                     <input type="email" class="form-control" id="loginEmail" placeholder="tu@email.com" required>
                                 </div>
 
                                 <div class="mb-3">
-                                    <label for="loginPassword" class="form-label small text-secondary text-uppercase">Contraseña</label>
+                                    <label for="loginPassword" class="form-label small text-white text-uppercase">Contraseña</label>
                                     <input type="password" class="form-control" id="loginPassword" placeholder="••••••••" required>
                                 </div>
 
                                 <div class="form-check mb-3">
                                     <input class="form-check-input" type="checkbox" id="rememberMe">
-                                    <label class="form-check-label small text-secondary" for="rememberMe">
+                                    <label class="form-check-label small text-white" for="rememberMe">
                                         Recuérdame
                                     </label>
                                 </div>
@@ -159,12 +159,12 @@
                                 <!-- NOMBRE Y APELLIDOS -->
                                 <div class="row">
                                     <div class="col-md-6 mb-3">
-                                        <label for="regNombre" class="form-label small text-secondary text-uppercase">Nombre</label>
+                                        <label for="regNombre" class="form-label small text-white text-uppercase">Nombre</label>
                                         <input type="text" class="form-control" id="regNombre" placeholder="Juan" required>
                                         <small class="text-danger d-none" id="nombreError"></small>
                                     </div>
                                     <div class="col-md-6 mb-3">
-                                        <label for="regApellidos" class="form-label small text-secondary text-uppercase">Apellidos</label>
+                                        <label for="regApellidos" class="form-label small text-white text-uppercase">Apellidos</label>
                                         <input type="text" class="form-control" id="regApellidos" placeholder="García López" required>
                                         <small class="text-danger d-none" id="apellidosError"></small>
                                     </div>
@@ -172,14 +172,14 @@
 
                                 <!-- EMAIL -->
                                 <div class="mb-3">
-                                    <label for="regEmail" class="form-label small text-secondary text-uppercase">Correo Electrónico</label>
+                                    <label for="regEmail" class="form-label small text-white text-uppercase">Correo Electrónico</label>
                                     <input type="email" class="form-control" id="regEmail" placeholder="tu@email.com" required>
                                     <small class="text-danger d-none" id="emailError"></small>
                                 </div>
 
                                 <!-- CONTRASEÑA -->
                                 <div class="mb-3">
-                                    <label for="regPassword" class="form-label small text-secondary text-uppercase">Contraseña</label>
+                                    <label for="regPassword" class="form-label small text-white text-uppercase">Contraseña</label>
                                     <input type="password" class="form-control" id="regPassword" placeholder="Mín. 8 caracteres" required>
                                     <div class="password-strength" id="passwordStrength"></div>
                                     <small class="text-danger d-none" id="passwordError"></small>
@@ -187,7 +187,7 @@
 
                                 <!-- CRITERIOS DE CONTRASEÑA -->
                                 <div class="mb-3">
-                                    <small class="text-secondary d-block mb-2">Tu contraseña debe cumplir:</small>
+                                    <small class="text-white d-block mb-2">Tu contraseña debe cumplir:</small>
                                     <ul id="pwValidation" class="list-unstyled small" style="padding-left: 0;">
                                         <li data-rule="length" class="text-danger"><i class="bi bi-x-circle"></i> Mínimo 8 caracteres</li>
                                         <li data-rule="lower" class="text-danger"><i class="bi bi-x-circle"></i> Una minúscula</li>
@@ -199,14 +199,14 @@
 
                                 <!-- CONFIRMAR CONTRASEÑA -->
                                 <div class="mb-3">
-                                    <label for="regPasswordConfirm" class="form-label small text-secondary text-uppercase">Confirmar Contraseña</label>
+                                    <label for="regPasswordConfirm" class="form-label small text-white text-uppercase">Confirmar Contraseña</label>
                                     <input type="password" class="form-control" id="regPasswordConfirm" placeholder="Repite tu contraseña" required>
                                     <small class="text-danger d-none" id="passwordConfirmError"></small>
                                 </div>
 
                                 <!-- GÉNERO -->
                                 <div class="mb-3">
-                                    <label class="form-label small text-secondary text-uppercase">Género</label>
+                                    <label class="form-label small text-white text-uppercase">Género</label>
                                     <select class="form-select" id="regGenero" required>
                                         <option value="">Selecciona tu género</option>
                                         <option value="masculino">Masculino</option>
@@ -217,25 +217,25 @@
 
                                 <!-- FECHA DE NACIMIENTO -->
                                 <div class="mb-3">
-                                    <label for="regFechaNacimiento" class="form-label small text-secondary text-uppercase">Fecha de Nacimiento</label>
+                                    <label for="regFechaNacimiento" class="form-label small text-white text-uppercase">Fecha de Nacimiento</label>
                                     <input type="date" class="form-control" id="regFechaNacimiento" required>
                                 </div>
 
                                 <!-- DIRECCIÓN -->
                                 <div class="mb-3">
-                                    <label for="regDireccion" class="form-label small text-secondary text-uppercase">Dirección</label>
+                                    <label for="regDireccion" class="form-label small text-white text-uppercase">Dirección</label>
                                     <input type="text" class="form-control" id="regDireccion" placeholder="Calle Principal, 123" required>
                                 </div>
 
                                 <!-- PAÍS -->
                                 <div class="mb-3">
-                                    <label for="regPais" class="form-label small text-secondary text-uppercase">País</label>
+                                    <label for="regPais" class="form-label small text-white text-uppercase">País</label>
                                     <input type="text" class="form-control" id="regPais" placeholder="España" required>
                                 </div>
 
                                 <!-- TARJETA (Solo visible si tiene dirección y país) -->
                                 <div id="tarjetaGroup" class="mb-3 d-none">
-                                    <label for="regTarjeta" class="form-label small text-secondary text-uppercase">Tarjeta de Crédito (Opcional)</label>
+                                    <label for="regTarjeta" class="form-label small text-white text-uppercase">Tarjeta de Crédito (Opcional)</label>
                                     <input type="text" class="form-control" id="regTarjeta" placeholder="1234 5678 9012 3456">
                                     <small class="text-danger d-none" id="tarjetaError"></small>
                                 </div>
@@ -243,7 +243,7 @@
                                 <!-- NOTIFICACIONES -->
                                 <div class="form-check mb-3">
                                     <input class="form-check-input" type="checkbox" id="regNotificaciones">
-                                    <label class="form-check-label small text-secondary" for="regNotificaciones">
+                                    <label class="form-check-label small text-white" for="regNotificaciones">
                                         Quiero recibir notificaciones
                                     </label>
                                 </div>
@@ -251,7 +251,7 @@
                                 <!-- TÉRMINOS -->
                                 <div class="form-check mb-3">
                                     <input class="form-check-input" type="checkbox" id="regTerminos" required>
-                                    <label class="form-check-label small text-secondary" for="regTerminos">
+                                    <label class="form-check-label small text-white" for="regTerminos">
                                         Acepto los términos y condiciones
                                     </label>
                                 </div>

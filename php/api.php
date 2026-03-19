@@ -100,6 +100,11 @@ switch ($action) {
         obtenerOpiniones();
         break;
 
+    // ============ BÚSQUEDA ============
+    case 'buscar':
+        buscarArticulos();
+        break;
+
     default:
         http_response_code(400);
         echo json_encode([
@@ -964,6 +969,66 @@ function obtenerOpiniones() {
         echo json_encode([
             'success' => false,
             'mensaje' => 'Error al obtener opiniones'
+        ]);
+    }
+}
+
+// ========================================
+// FUNCIONES DE BÚSQUEDA
+// ========================================
+
+function buscarArticulos() {
+    global $pdo;
+
+    $termino = isset($_GET['q']) ? $_GET['q'] : '';
+
+    if (strlen($termino) < 2) {
+        http_response_code(400);
+        echo json_encode([
+            'success' => false,
+            'mensaje' => 'El término de búsqueda debe tener al menos 2 caracteres'
+        ]);
+        return;
+    }
+
+    try {
+        $busqueda = '%' . $termino . '%';
+        
+        $stmt = $pdo->prepare('
+            SELECT 
+                a.id, 
+                a.nombre, 
+                a.descripcion, 
+                a.precio, 
+                a.stock, 
+                a.id_categoria, 
+                a.imagen_url,
+                a.disponible,
+                c.nombre as categoria_nombre
+            FROM articulos a
+            LEFT JOIN categorias c ON a.id_categoria = c.id
+            WHERE a.disponible = TRUE AND (
+                a.nombre LIKE ? OR 
+                a.descripcion LIKE ?
+            )
+            ORDER BY a.nombre ASC
+        ');
+
+        $stmt->execute([$busqueda, $busqueda]);
+        $resultados = $stmt->fetchAll();
+
+        echo json_encode([
+            'success' => true,
+            'total' => count($resultados),
+            'termino' => $termino,
+            'datos' => $resultados
+        ]);
+    } catch (Exception $e) {
+        http_response_code(500);
+        echo json_encode([
+            'success' => false,
+            'mensaje' => 'Error al realizar la búsqueda',
+            'debug' => $e->getMessage()
         ]);
     }
 }
