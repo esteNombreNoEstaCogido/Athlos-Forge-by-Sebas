@@ -94,59 +94,9 @@ h3 {
     background-position: center;
 }
 
-/* --- 4. ESTILOS PARA FORMULARIO DE REGISTRO (OVERLAY) --- */
-.register-overlay {
-    position: fixed;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(0, 0, 0, 0.65);
-    z-index: 2000;
-    visibility: hidden;
-    opacity: 0;
-    transition: opacity 0.2s ease, visibility 0.2s ease;
-    padding: 20px;
-}
-
-.register-overlay.visible {
-    visibility: visible;
-    opacity: 1;
-}
-
-.register-card {
-    max-width: 900px;
-    width: 100%;
-    max-height: 90vh;
-    overflow-y: auto;
-}
-
-.create-account-btn {
-    color: var(--gold-color);
-    font-weight: 700;
-    text-decoration: underline;
-}
-
-.create-account-btn:hover {
-    color: var(--gold-bright);
-}
-
 /* Ajustes para el botón de cerrar cuando usamos tema oscuro */
 .btn-close-white {
     filter: invert(1) brightness(1.2);
-}
-
-/* Estilos para la lista de criterios de contraseña */
-#validacionesPW li {
-    font-size: 0.9rem;
-}
-
-#validacionesPW li.text-success {
-    color: #4BB543 !important;
-}
-
-#validacionesPW li.text-danger {
-    color: #e74c3c !important;
 }
 
 /* Make invalid inputs clearly visible on dark background */

@@ -80,12 +80,10 @@ Athlos Forge by Sebas/
 ├── js/
 │   ├── autenticacion.js    # Lógica de login/registro
 │   ├── carrito.js          # Gestión del carrito
-│   ├── validaciones.js     # Validadores de formularios
-│   └── Regex.js            # Utilidades regex
+│   └── admin.js            # Panel de administración
 ├── php/
-│   ├── api.php             # Backend API
-│   ├── db.php              # Conexión BD
-│   └── registro.php        # Procesamiento registro
+│   ├── api.php             # Backend API REST
+│   └── db.php              # Conexión BD + helpers
 ├── db/
 │   └── schema.sql          # Estructura de BD
 ├── img/                    # Imágenes y recursos
@@ -134,5 +132,5 @@ Athlos Forge by Sebas/
 
 ---
 
-**Última actualización:** 19 de marzo de 2026  
+**Última actualización:** 20 de marzo de 2026  
 
