@@ -3,6 +3,8 @@
 -- ============================================
 -- Este script crea todas las tablas necesarias para
 -- el funcionamiento de la plataforma de entrenamientos
+-- Contraseñas: hash bcrypt (password_hash PHP)
+-- Tarjetas de crédito: cifrado AES-256-CBC (openssl PHP)
 
 -- Crear base de datos
 CREATE DATABASE IF NOT EXISTS athlos_forge;
@@ -12,18 +14,20 @@ USE athlos_forge;
 -- TABLA: USUARIOS
 -- ============================================
 -- Almacena información de usuarios registrados
+-- password → hash bcrypt (no reversible)
+-- tarjeta_credito → cifrado AES-256-CBC (reversible solo con clave del servidor)
 CREATE TABLE usuarios (
     id INT PRIMARY KEY AUTO_INCREMENT,
     nombre VARCHAR(100) NOT NULL COMMENT 'Máximo dos palabras',
     apellidos VARCHAR(100) NOT NULL COMMENT 'Máximo dos palabras',
     email VARCHAR(120) UNIQUE NOT NULL,
-    password VARCHAR(255) NOT NULL COMMENT 'Hash bcrypt',
+    password VARCHAR(255) NOT NULL COMMENT 'Hash bcrypt via password_hash()',
     rol ENUM('cliente', 'administrador') DEFAULT 'cliente',
-    genero ENUM('masculino', 'femenino', 'otros') NOT NULL,
-    fecha_nacimiento DATE NOT NULL,
-    direccion VARCHAR(200) NOT NULL,
-    pais VARCHAR(100) NOT NULL,
-    tarjeta_credito VARCHAR(20) COMMENT 'Opcional, encriptada en producción',
+    genero ENUM('masculino', 'femenino', 'otros') DEFAULT NULL,
+    fecha_nacimiento DATE DEFAULT NULL,
+    direccion VARCHAR(200) DEFAULT NULL,
+    pais VARCHAR(100) DEFAULT NULL,
+    tarjeta_credito TEXT COMMENT 'Cifrado AES-256-CBC, base64 encoded',
     telefono VARCHAR(20),
     notificaciones BOOLEAN DEFAULT FALSE,
     estado ENUM('activo', 'inactivo', 'bloqueado') DEFAULT 'activo',
@@ -31,6 +35,25 @@ CREATE TABLE usuarios (
     fecha_ultima_sesion DATETIME,
     INDEX idx_email (email),
     INDEX idx_estado (estado)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================
+-- TABLA: SESIONES
+-- ============================================
+-- Gestión de sesiones activas de usuarios
+CREATE TABLE sesiones (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    id_usuario INT NOT NULL,
+    session_id VARCHAR(128) NOT NULL COMMENT 'PHP session_id()',
+    ip_address VARCHAR(45),
+    user_agent TEXT,
+    fecha_inicio TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    fecha_ultima_actividad TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    activa BOOLEAN DEFAULT TRUE,
+    FOREIGN KEY (id_usuario) REFERENCES usuarios(id) ON DELETE CASCADE,
+    INDEX idx_session (session_id),
+    INDEX idx_usuario (id_usuario),
+    INDEX idx_activa (activa)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================
@@ -226,18 +249,21 @@ INSERT INTO categorias (nombre, descripcion) VALUES
 ('Pilates', 'Mejora tu flexibilidad y fortalece tu core'),
 ('Asesoramiento', 'Consultas personalizadas de nutrición y entrenamiento');
 
--- Insertar artículos de ejemplo
-INSERT INTO articulos (nombre, descripcion, precio, stock, id_categoria, disponible) VALUES
-('Entrenamiento Funcional - 1 Sesión', 'Una sesión completa de entrenamiento funcional', 50.00, 100, 1, TRUE),
-('Boxeo - 1 Sesión', 'Clase de boxeo con instrucciones profesionales', 60.00, 80, 2, TRUE),
-('Pilates - 1 Sesión', 'Sesión de pilates y movilidad', 45.00, 90, 3, TRUE),
-('Paquete Completo', 'Acceso a todos los entrenamientos por un mes', 120.00, 50, 4, TRUE),
-('Asesoramiento Personalizado', 'Consulta 1 a 1 con el entrenador', 80.00, 30, 4, TRUE);
+-- Insertar artículos (coinciden con entrenamientos.html)
+INSERT INTO articulos (nombre, descripcion, precio, stock, id_categoria, imagen_url, disponible) VALUES
+('Entrenamiento Funcional', 'Mejora tu resistencia y fuerza con ejercicios dinámicos que fortalecen todo el cuerpo.', 50.00, 100, 1, 'img/funcional.webp', TRUE),
+('Boxeo / Kickboxing', 'Aprende técnicas de defensa y ataque con profesionales certificados.', 60.00, 80, 2, 'img/boxeo.webp', TRUE),
+('Pilates / Movilidad', 'Aumenta tu flexibilidad y fortalece el core con movimientos controlados.', 45.00, 90, 3, 'img/pilates.webp', TRUE),
+('Paquete Completo', 'Acceso a todos los entrenamientos + asesoramiento personalizado.', 120.00, 50, 4, 'img/paquete.webp', TRUE),
+('GAP', 'Abdomen, Glúteos y Piernas. Tonifica las zonas más buscadas con ejercicios efectivos.', 55.00, 70, 1, 'img/gap.webp', TRUE),
+('Rehabilitación', 'Recuperate y fortalécete con fisioterapia especializada e individualizada.', 65.00, 40, 4, 'img/rehabilitacion.webp', TRUE),
+('Fuerza', 'Potencia tus músculos con entrenamientos de musculación de alta intensidad.', 70.00, 60, 1, 'img/fuerza.webp', TRUE),
+('Ciclo / Spinning', 'Quema calorías y mejora tu resistencia cardiovascular en bicicleta estática.', 50.00, 85, 1, 'img/spinning.webp', TRUE);
 
 -- Crear usuario administrador de prueba (contraseña: Admin123!)
 -- En producción, usar un hash bcrypt adecuado
 INSERT INTO usuarios (nombre, apellidos, email, password, rol, genero, fecha_nacimiento, direccion, pais, estado) VALUES
-('Admin', 'Sistema', 'admin@athlosforge.com', '$2y$10$EaJTL7G1sQqYPfj5FVX7XeOJmLxDl8MX.KxG9JR7lCrQ9F3JvQkYO', 'administrador', 'masculino', '1990-01-01', 'Calle Admin, 1', 'España', 'activo');
+('Admin', 'Sistema', 'admin@athlosforge.com', '$2y$10$53xGXGd92GpbV4GAz0kP.eTyH2Q.dFtwZ6cAxfSXPNeSiEpdNPb2S', 'administrador', 'masculino', '1990-01-01', 'Calle Admin, 1', 'España', 'activo');
 
 -- ============================================
 -- PROCEDIMIENTOS ALMACENADOS
@@ -254,9 +280,9 @@ CREATE PROCEDURE sp_registrar_usuario(
     IN p_fecha_nacimiento DATE,
     IN p_direccion VARCHAR(200),
     IN p_pais VARCHAR(100),
-    IN p_tarjeta VARCHAR(20),
+    IN p_tarjeta TEXT,
+    IN p_telefono VARCHAR(20),
     IN p_notificaciones BOOLEAN,
-    IN p_revista BOOLEAN,
     OUT p_id INT,
     OUT p_success BOOLEAN,
     OUT p_mensaje VARCHAR(255)
@@ -275,11 +301,11 @@ BEGIN
         INSERT INTO usuarios (
             nombre, apellidos, email, password, genero,
             fecha_nacimiento, direccion, pais, tarjeta_credito,
-            notificaciones, revista_digital
+            telefono, notificaciones
         ) VALUES (
             p_nombre, p_apellidos, p_email, p_password, p_genero,
             p_fecha_nacimiento, p_direccion, p_pais, p_tarjeta,
-            p_notificaciones, p_revista
+            p_telefono, p_notificaciones
         );
         
         SET p_id = LAST_INSERT_ID();

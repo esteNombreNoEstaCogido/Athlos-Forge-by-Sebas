@@ -302,11 +302,11 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        // Enviar (demo)
         const data = {
             nombre: campoNombre.value.trim(),
             apellidos: campoApellidos?.value.trim() || '',
             email: campoEmail.value.trim(),
+            password: campoPassword.value,
             telefono: formularioRegistro.querySelector('input[name="telefono"]')?.value.trim() || '',
             nacimiento: formularioRegistro.querySelector('input[name="nacimiento"]')?.value || '',
             disciplinas: Array.from(formularioRegistro.querySelectorAll('input[name="disciplina"]:checked')).map(i => i.value),

@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis Pedidos - Athlos Forge</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .pedidos-page {
+            min-height: 100vh;
+            padding-top: 160px;
+            padding-bottom: 60px;
+            background: radial-gradient(circle at 30% 50%, rgba(212, 175, 55, 0.05) 0%, rgba(0, 0, 0, 0) 60%),
+                linear-gradient(180deg, rgba(0, 0, 0, 0.7) 0%, rgba(5, 5, 5, 1) 100%);
+        }
+
+        .pedido-card {
+            background: #121212;
+            border: 1px solid rgba(212, 175, 55, 0.15);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            transition: border-color 0.2s;
+        }
+
+        .pedido-card:hover {
+            border-color: rgba(212, 175, 55, 0.4);
+        }
+
+        .pedido-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .pedido-numero {
+            color: #D4AF37;
+            font-weight: 700;
+            font-size: 1.1em;
+        }
+
+        .badge-estado {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+
+        .badge-pendiente { background: #ffc107; color: #000; }
+        .badge-confirmado { background: #17a2b8; color: #fff; }
+        .badge-enviado { background: #6f42c1; color: #fff; }
+        .badge-entregado { background: #28a745; color: #fff; }
+        .badge-cancelado { background: #dc3545; color: #fff; }
+
+        .pedido-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .pedido-info-item {
+            font-size: 0.9em;
+        }
+
+        .pedido-info-item .label {
+            color: #888;
+            font-size: 0.8em;
+            text-transform: uppercase;
+        }
+
+        .pedido-info-item .value {
+            color: #fff;
+            font-weight: 600;
+        }
+
+        .pedido-detalles {
+            background: #0d0d0d;
+            border-radius: 6px;
+            padding: 15px;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .pedido-detalles.visible {
+            display: block;
+        }
+
+        .pedido-detalles table {
+            margin-bottom: 0;
+        }
+
+        .pedido-detalles th {
+            color: #D4AF37;
+            border-color: rgba(212, 175, 55, 0.1);
+            font-size: 0.8em;
+            text-transform: uppercase;
+        }
+
+        .pedido-detalles td {
+            color: #ddd;
+            border-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .btn-ver-detalle {
+            background: none;
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            color: #D4AF37;
+            padding: 5px 15px;
+            border-radius: 5px;
+            font-size: 0.85em;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-ver-detalle:hover {
+            background: rgba(212, 175, 55, 0.1);
+            color: #D4AF37;
+        }
+
+        .pedidos-empty {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .pedidos-empty i {
+            font-size: 4em;
+            color: #333;
+        }
+
+        .resumen-pedido-modal {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .resumen-pedido-content {
+            background: #1a1a1a;
+            border: 2px solid #D4AF37;
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 550px;
+            width: 90%;
+            max-height: 85vh;
+            overflow-y: auto;
+            color: #fff;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- NAVEGACIÓN -->
+    <nav class="navbar navbar-dark navbar-expand-lg fixed-top">
+        <div class="container-fluid d-flex justify-content-between align-items-center ps-3 pe-3">
+            <a class="navbar-brand d-flex align-items-center" href="index.html">
+                <img src="img/logo-athlos.png" alt="Athlos Forge Logo">
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav mx-auto gap-4">
+                    <li class="nav-item"><a class="nav-link text-white fw-bold" href="index.html">Inicio</a></li>
+                    <li class="nav-item"><a class="nav-link text-white fw-bold" href="entrenamientos.html">Entrenamientos</a></li>
+                    <li class="nav-item"><a class="nav-link text-white fw-bold" href="blog.html">Blog</a></li>
+                    <li class="nav-item"><a class="nav-link text-white fw-bold" href="opiniones.html">Opiniones</a></li>
+                </ul>
+            </div>
+            <div class="ms-auto d-flex align-items-center gap-3">
+                <span class="text-gold-flat fw-bold" id="userGreeting" style="display:none;white-space:nowrap;"></span>
+                <button class="btn btn-gold-navbar text-white fw-bold" id="loginNavItem" onclick="window.location.href='login.html'" style="padding:10px 25px;font-size:0.9rem;">Acceder</button>
+                <button class="btn btn-danger fw-bold" id="logoutNavItem" onclick="logout()" style="display:none;padding:10px 25px;font-size:0.9rem;">Salir</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- CONTENIDO -->
+    <section class="pedidos-page">
+        <div class="container" style="max-width: 800px;">
+            <h1 class="text-center mb-5">
+                Mis <span class="text-gold-gradient">Pedidos</span>
+            </h1>
+            <div id="listaPedidos">
+                <div class="text-center"><div class="spinner-border text-warning" role="status"></div></div>
+            </div>
+        </div>
+    </section>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const API_URL = 'php/api.php';
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            checkUserLogin();
+
+            // Verificar sesión
+            try {
+                const res = await fetch(`${API_URL}?action=sesion`, { credentials: 'include' });
+                const data = await res.json();
+
+                if (!data.success || !data.autenticado) {
+                    document.getElementById('listaPedidos').innerHTML = `
+                        <div class="pedidos-empty">
+                            <i class="bi bi-lock"></i>
+                            <h4 class="mt-3">Inicia sesión</h4>
+                            <p class="text-muted">Necesitas iniciar sesión para ver tus pedidos.</p>
+                            <a href="login.html" class="btn btn-gold-sm px-4 py-2">Iniciar Sesión</a>
+                        </div>`;
+                    return;
+                }
+
+                cargarPedidos();
+            } catch (e) {
+                document.getElementById('listaPedidos').innerHTML = '<p class="text-danger text-center">Error de conexión</p>';
+            }
+        });
+
+        async function cargarPedidos() {
+            try {
+                const res = await fetch(`${API_URL}?action=obtener_pedidos`, { credentials: 'include' });
+                const data = await res.json();
+
+                if (!data.success) {
+                    document.getElementById('listaPedidos').innerHTML = '<p class="text-danger text-center">' + data.mensaje + '</p>';
+                    return;
+                }
+
+                const pedidos = data.datos;
+
+                if (pedidos.length === 0) {
+                    document.getElementById('listaPedidos').innerHTML = `
+                        <div class="pedidos-empty">
+                            <i class="bi bi-cart-x"></i>
+                            <h4 class="mt-3">Sin pedidos</h4>
+                            <p class="text-muted">Aún no has realizado ningún pedido.</p>
+                            <a href="entrenamientos.html" class="btn btn-gold-sm px-4 py-2">Ver Entrenamientos</a>
+                        </div>`;
+                    return;
+                }
+
+                document.getElementById('listaPedidos').innerHTML = pedidos.map(p => `
+                    <div class="pedido-card" id="pedido-${p.id}">
+                        <div class="pedido-header">
+                            <span class="pedido-numero">${p.numero_pedido}</span>
+                            <span class="badge-estado badge-${p.estado}">${p.estado.charAt(0).toUpperCase() + p.estado.slice(1)}</span>
+                        </div>
+                        <div class="pedido-info">
+                            <div class="pedido-info-item">
+                                <div class="label">Total</div>
+                                <div class="value">${parseFloat(p.total).toFixed(2)}€</div>
+                            </div>
+                            <div class="pedido-info-item">
+                                <div class="label">Fecha Pedido</div>
+                                <div class="value">${formatearFecha(p.fecha_pedido)}</div>
+                            </div>
+                            <div class="pedido-info-item">
+                                <div class="label">Entrega Estimada</div>
+                                <div class="value">${p.fecha_entrega_estimada ? formatearFecha(p.fecha_entrega_estimada) : '-'}</div>
+                            </div>
+                            <div class="pedido-info-item">
+                                <div class="label">Dirección</div>
+                                <div class="value">${p.direccion_envio || '-'}</div>
+                            </div>
+                        </div>
+                        <button class="btn-ver-detalle" onclick="toggleDetalle(${p.id})">
+                            <i class="bi bi-chevron-down"></i> Ver artículos
+                        </button>
+                        <div class="pedido-detalles" id="detalles-${p.id}"></div>
+                    </div>
+                `).join('');
+            } catch (e) {
+                document.getElementById('listaPedidos').innerHTML = '<p class="text-danger text-center">Error al cargar pedidos</p>';
+            }
+        }
+
+        async function toggleDetalle(idPedido) {
+            const container = document.getElementById('detalles-' + idPedido);
+            
+            if (container.classList.contains('visible')) {
+                container.classList.remove('visible');
+                return;
+            }
+
+            container.innerHTML = '<p class="text-center py-2"><span class="spinner-border spinner-border-sm text-warning"></span></p>';
+            container.classList.add('visible');
+
+            try {
+                const res = await fetch(`${API_URL}?action=obtener_pedido&id=${idPedido}`, { credentials: 'include' });
+                const data = await res.json();
+
+                if (!data.success) { container.innerHTML = '<p class="text-danger">Error</p>'; return; }
+
+                const detalles = data.datos.detalles;
+                container.innerHTML = `
+                    <table class="table table-dark table-sm">
+                        <thead><tr><th>Producto</th><th>Cant.</th><th>Precio</th><th>Subtotal</th></tr></thead>
+                        <tbody>
+                            ${detalles.map(d => `
+                            <tr>
+                                <td>${d.nombre}</td>
+                                <td>${d.cantidad}</td>
+                                <td>${parseFloat(d.precio_unitario).toFixed(2)}€</td>
+                                <td>${parseFloat(d.subtotal).toFixed(2)}€</td>
+                            </tr>`).join('')}
+                        </tbody>
+                    </table>
+                `;
+            } catch (e) {
+                container.innerHTML = '<p class="text-danger">Error de conexión</p>';
+            }
+        }
+
+        function formatearFecha(fechaStr) {
+            if (!fechaStr) return '-';
+            const fecha = new Date(fechaStr);
+            return fecha.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        }
+
+        function checkUserLogin() {
+            const usuario = localStorage.getItem('usuario');
+            if (usuario) {
+                const user = JSON.parse(usuario);
+                document.getElementById('userGreeting').textContent = 'Bienvenido ' + user.nombre;
+                document.getElementById('userGreeting').style.display = 'block';
+                document.getElementById('loginNavItem').style.display = 'none';
+                document.getElementById('logoutNavItem').style.display = 'block';
+            }
+        }
+
+        async function logout() {
+            try {
+                await fetch(`${API_URL}?action=logout`, { method: 'POST', credentials: 'include' });
+            } catch (e) { }
+            localStorage.removeItem('usuario');
+            window.location.href = 'login.html';
+        }
+    </script>
+</body>
+
+</html>

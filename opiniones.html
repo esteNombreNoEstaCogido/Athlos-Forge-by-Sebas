@@ -41,6 +41,8 @@
 
             <div class="ms-auto d-flex align-items-center gap-3">
                 <span class="text-gold-flat fw-bold" id="userGreeting" style="display: none; white-space: nowrap;"></span>
+                <a class="btn btn-outline-warning fw-bold" id="misPedidosNav" href="mis-pedidos.html" style="display:none;padding:8px 15px;font-size:0.85rem;">Mis Pedidos</a>
+                <a class="btn btn-outline-warning fw-bold" id="adminNav" href="admin.html" style="display:none;padding:8px 15px;font-size:0.85rem;">Admin</a>
                 <button class="btn btn-gold-navbar text-white fw-bold" id="loginNavItem" onclick="window.location.href='login.html'" style="padding: 10px 25px; font-size: 0.9rem;">Acceder</button>
                 <button class="btn btn-danger fw-bold" id="logoutNavItem" onclick="logout()" style="display: none; padding: 10px 25px; font-size: 0.9rem;">Salir</button>
             </div>
@@ -56,11 +58,17 @@
                 document.getElementById('userGreeting').style.display = 'block';
                 document.getElementById('loginNavItem').style.display = 'none';
                 document.getElementById('logoutNavItem').style.display = 'block';
+                document.getElementById('misPedidosNav').style.display = 'inline-block';
+                if (user.rol === 'administrador') {
+                    document.getElementById('adminNav').style.display = 'inline-block';
+                }
             }
         }
         
-        function logout() {
-            localStorage.removeItem('token');
+        async function logout() {
+            try {
+                await fetch('php/api.php?action=logout', { method: 'POST', credentials: 'include' });
+            } catch (e) { }
             localStorage.removeItem('usuario');
             document.getElementById('userGreeting').style.display = 'none';
             document.getElementById('loginNavItem').style.display = 'block';

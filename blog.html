@@ -41,6 +41,8 @@
 
             <div class="ms-auto d-flex align-items-center gap-3">
                 <span class="text-gold-flat fw-bold" id="userGreeting" style="display: none; white-space: nowrap;"></span>
+                <a class="btn btn-outline-warning fw-bold" id="misPedidosNav" href="mis-pedidos.html" style="display:none;padding:8px 15px;font-size:0.85rem;">Mis Pedidos</a>
+                <a class="btn btn-outline-warning fw-bold" id="adminNav" href="admin.html" style="display:none;padding:8px 15px;font-size:0.85rem;">Admin</a>
                 <button class="btn btn-gold-navbar text-white fw-bold" id="loginNavItem" onclick="window.location.href='login.html'" style="padding: 10px 25px; font-size: 0.9rem;">Acceder</button>
                 <button class="btn btn-danger fw-bold" id="logoutNavItem" onclick="logout()" style="display: none; padding: 10px 25px; font-size: 0.9rem;">Salir</button>
             </div>
@@ -56,11 +58,17 @@
                 document.getElementById('userGreeting').style.display = 'block';
                 document.getElementById('loginNavItem').style.display = 'none';
                 document.getElementById('logoutNavItem').style.display = 'block';
+                document.getElementById('misPedidosNav').style.display = 'inline-block';
+                if (user.rol === 'administrador') {
+                    document.getElementById('adminNav').style.display = 'inline-block';
+                }
             }
         }
         
-        function logout() {
-            localStorage.removeItem('token');
+        async function logout() {
+            try {
+                await fetch('php/api.php?action=logout', { method: 'POST', credentials: 'include' });
+            } catch (e) { }
             localStorage.removeItem('usuario');
             document.getElementById('userGreeting').style.display = 'none';
             document.getElementById('loginNavItem').style.display = 'block';
@@ -83,12 +91,12 @@
                 <!-- ARTÍCULO 1 -->
                 <div class="col-md-6 col-lg-4">
                     <div class="card h-100 border-0 bg-dark">
-                        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); height: 200px;"></div>
+                        <img src="img/blog-funcional.webp" alt="Entrenamiento funcional" class="card-img-top" style="height:200px;object-fit:cover;">
                         <div class="card-body">
                             <small class="text-gold-flat">15 de Enero, 2026</small>
                             <h5 class="card-title text-gold-gradient mt-2">Los 5 Beneficios del Entrenamiento Funcional</h5>
                             <p class="card-text text-white">Descubre cómo el entrenamiento funcional puede transformar tu cuerpo y mejorar tu calidad de vida...</p>
-                            <a href="#" class="btn btn-sm btn-outline-warning">Leer más</a>
+                            <a href="https://www.sportlife.es/fitness/entrenamiento-funcional-que-es-beneficios" target="_blank" rel="noopener" class="btn btn-sm btn-outline-warning">Leer más</a>
                         </div>
                     </div>
                 </div>
@@ -96,12 +104,12 @@
                 <!-- ARTÍCULO 2 -->
                 <div class="col-md-6 col-lg-4">
                     <div class="card h-100 border-0 bg-dark">
-                        <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); height: 200px;"></div>
+                        <img src="img/blog-nutricion.webp" alt="Nutrición deportiva" class="card-img-top" style="height:200px;object-fit:cover;">
                         <div class="card-body">
                             <small class="text-gold-flat">12 de Enero, 2026</small>
                             <h5 class="card-title text-gold-gradient mt-2">Nutrición para Deportistas: Guía Completa</h5>
                             <p class="card-text text-white">Todo lo que necesitas saber sobre la nutrición adecuada para maximizar tus resultados...</p>
-                            <a href="#" class="btn btn-sm btn-outline-warning">Leer más</a>
+                            <a href="https://www.sportlife.es/nutricion/guia-nutricion-deportiva" target="_blank" rel="noopener" class="btn btn-sm btn-outline-warning">Leer más</a>
                         </div>
                     </div>
                 </div>
@@ -109,12 +117,12 @@
                 <!-- ARTÍCULO 3 -->
                 <div class="col-md-6 col-lg-4">
                     <div class="card h-100 border-0 bg-dark">
-                        <div style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); height: 200px;"></div>
+                        <img src="img/blog-recuperacion.webp" alt="Recuperación muscular" class="card-img-top" style="height:200px;object-fit:cover;">
                         <div class="card-body">
                             <small class="text-gold-flat">10 de Enero, 2026</small>
                             <h5 class="card-title text-gold-gradient mt-2">Recuperación Muscular: Técnicas Avanzadas</h5>
                             <p class="card-text text-white">Aprende las mejores prácticas para acelerar tu recuperación después del entrenamiento...</p>
-                            <a href="#" class="btn btn-sm btn-outline-warning">Leer más</a>
+                            <a href="https://www.vitonica.com/entrenamiento/como-mejorar-recuperacion-muscular-despues-entrenar" target="_blank" rel="noopener" class="btn btn-sm btn-outline-warning">Leer más</a>
                         </div>
                     </div>
                 </div>
@@ -122,12 +130,12 @@
                 <!-- ARTÍCULO 4 -->
                 <div class="col-md-6 col-lg-4">
                     <div class="card h-100 border-0 bg-dark">
-                        <div style="background: linear-gradient(135deg, #c41e3a 0%, #8b0000 100%); height: 200px;"></div>
+                        <img src="img/blog-mentalidad.webp" alt="Mentalidad deportiva" class="card-img-top" style="height:200px;object-fit:cover;">
                         <div class="card-body">
                             <small class="text-gold-flat">8 de Enero, 2026</small>
                             <h5 class="card-title text-gold-gradient mt-2">Mentalidad de Campeón</h5>
                             <p class="card-text text-white">Cómo desarrollar la mentalidad correcta para alcanzar tus objetivos fitness...</p>
-                            <a href="#" class="btn btn-sm btn-outline-warning">Leer más</a>
+                            <a href="https://www.vitonica.com/wellness/mentalidad-ganadora-como-entrenar-tu-mente-para-mejorar-rendimiento" target="_blank" rel="noopener" class="btn btn-sm btn-outline-warning">Leer más</a>
                         </div>
                     </div>
                 </div>
@@ -135,12 +143,12 @@
                 <!-- ARTÍCULO 5 -->
                 <div class="col-md-6 col-lg-4">
                     <div class="card h-100 border-0 bg-dark">
-                        <div style="background: linear-gradient(135deg, #FFB347 0%, #FF8C00 100%); height: 200px;"></div>
+                        <img src="img/blog-lesiones.webp" alt="Prevención de lesiones" class="card-img-top" style="height:200px;object-fit:cover;">
                         <div class="card-body">
                             <small class="text-gold-flat">5 de Enero, 2026</small>
                             <h5 class="card-title text-gold-gradient mt-2">Lesiones Comunes y Cómo Prevenirlas</h5>
                             <p class="card-text text-white">Conoce las lesiones más frecuentes en el entrenamiento y cómo evitarlas...</p>
-                            <a href="#" class="btn btn-sm btn-outline-warning">Leer más</a>
+                            <a href="https://www.sportlife.es/salud/lesiones-deportivas-mas-comunes" target="_blank" rel="noopener" class="btn btn-sm btn-outline-warning">Leer más</a>
                         </div>
                     </div>
                 </div>
@@ -148,12 +156,12 @@
                 <!-- ARTÍCULO 6 -->
                 <div class="col-md-6 col-lg-4">
                     <div class="card h-100 border-0 bg-dark">
-                        <div style="background: linear-gradient(135deg, #13547a 0%, #80d0c7 100%); height: 200px;"></div>
+                        <img src="img/blog-flexibilidad.webp" alt="Flexibilidad y stretching" class="card-img-top" style="height:200px;object-fit:cover;">
                         <div class="card-body">
                             <small class="text-gold-flat">3 de Enero, 2026</small>
                             <h5 class="card-title text-gold-gradient mt-2">Rutinas de Flexibilidad para Todos</h5>
                             <p class="card-text text-white">Rutinas prácticas y sencillas para mejorar tu flexibilidad día a día...</p>
-                            <a href="#" class="btn btn-sm btn-outline-warning">Leer más</a>
+                            <a href="https://www.vitonica.com/entrenamiento/11-ejercicios-flexibilidad-que-puedes-hacer-casa" target="_blank" rel="noopener" class="btn btn-sm btn-outline-warning">Leer más</a>
                         </div>
                     </div>
                 </div>

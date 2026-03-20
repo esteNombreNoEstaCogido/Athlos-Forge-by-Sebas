@@ -43,6 +43,8 @@
                 <span class="text-gold-flat fw-bold" id="userGreeting" style="display: none; white-space: nowrap;"></span>
                 <button class="btn btn-gold-navbar text-white fw-bold" id="loginNavItem" onclick="window.location.href='login.html'" style="padding: 10px 25px; font-size: 0.9rem;">Acceder</button>
                 <button class="btn btn-danger fw-bold" id="logoutNavItem" onclick="logout()" style="display: none; padding: 10px 25px; font-size: 0.9rem;">Salir</button>
+                <a class="btn btn-outline-warning fw-bold" id="misPedidosNav" href="mis-pedidos.html" style="display:none;padding:8px 15px;font-size:0.85rem;">Mis Pedidos</a>
+                <a class="btn btn-outline-warning fw-bold" id="adminNav" href="admin.html" style="display:none;padding:8px 15px;font-size:0.85rem;">Admin</a>
             </div>
         </div>
     </nav>
@@ -56,12 +58,19 @@
                 document.getElementById('userGreeting').style.display = 'block';
                 document.getElementById('loginNavItem').style.display = 'none';
                 document.getElementById('logoutNavItem').style.display = 'block';
+                document.getElementById('misPedidosNav').style.display = 'inline-block';
+                if (user.rol === 'administrador') {
+                    document.getElementById('adminNav').style.display = 'inline-block';
+                }
             }
         }
         
-        function logout() {
-            localStorage.removeItem('token');
+        async function logout() {
+            try {
+                await fetch('php/api.php?action=logout', { method: 'POST', credentials: 'include' });
+            } catch(e) {}
             localStorage.removeItem('usuario');
+            localStorage.removeItem('athlosCarrito');
             document.getElementById('userGreeting').style.display = 'none';
             document.getElementById('loginNavItem').style.display = 'block';
             document.getElementById('logoutNavItem').style.display = 'none';
@@ -74,7 +83,7 @@
     <!-- SECCIÓN PRINCIPAL -->
     <section class="entrenamientos-section">
         <div class="container py-5">
-            <h1 class="text-center mb-4 mt-5">
+            <h1 class="text-center mb-4 mt-3">
                 Nuestros <span class="text-gold-gradient">Entrenamientos</span>
             </h1>
 
@@ -96,159 +105,11 @@
                 </div>
             </div>
 
-            <!-- GRID DE ENTRENAMIENTOS -->
-            <div class="row g-4 mb-5">
-                <!-- ENTRENAMIENTO 1: Funcional -->
-                <div class="col-md-6 col-lg-3">
-                    <div class="card h-100 training-card border-0">
-                        <div class="training-image" style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); height: 250px; display: flex; align-items: center; justify-content: center;">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" fill="#D4AF37" viewBox="0 0 16 16">
-                                <path d="M6.5 1a.5.5 0 0 0-1 0v2h1V1zm3 0a.5.5 0 0 0-1 0v2h1V1zm1 3h-1v4h1V4z"/>
-                            </svg>
-                        </div>
-                        <div class="card-body d-flex flex-column">
-                            <h5 class="card-title text-gold-gradient mb-3">Entrenamiento Funcional</h5>
-                            <p class="card-text small text-white flex-grow-1">Mejora tu resistencia y fuerza con ejercicios dinámicos que fortalecen todo el cuerpo.</p>
-                            <div class="d-flex justify-content-between align-items-center mt-3">
-                                <span class="text-gold-flat fw-bold">50€</span>
-                                <button class="btn btn-sm btn-outline-warning" onclick="agregarAlCarrito('Entrenamiento Funcional', 50)">Agregar</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- ENTRENAMIENTO 2: Boxeo -->
-                <div class="col-md-6 col-lg-3">
-                    <div class="card h-100 training-card border-0">
-                        <div class="training-image" style="background: linear-gradient(135deg, #c41e3a 0%, #8b0000 100%); height: 250px; display: flex; align-items: center; justify-content: center;">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" fill="#D4AF37" viewBox="0 0 16 16">
-                                <path d="M5.338 1.59a61.44 61.44 0 0 0-2.837.856.481.481 0 0 0-.328.39c-.045.1-.095.232-.151.381l-.852 4.561c-.073.39-.073.805.073 1.196l1.272 2.91a.5.5 0 0 0 .464.314l1.733-.122.584 1.953 5.332-1.226.584-1.954 1.733.123a.5.5 0 0 0 .464-.314l1.272-2.91c.146-.39.146-.806.073-1.196l-.852-4.561a.481.481 0 0 0-.328-.39c-.951-.3-1.918-.57-2.837-.856C9.335 1.582 8.907 1.5 8 1.5c-.907 0-1.335.082-2.662.59z"/>
-                            </svg>
-                        </div>
-                        <div class="card-body d-flex flex-column">
-                            <h5 class="card-title text-gold-gradient mb-3">Boxeo / Kickboxing</h5>
-                            <p class="card-text small text-white flex-grow-1">Aprende técnicas de defensa y ataque con profesionales certificados.</p>
-                            <div class="d-flex justify-content-between align-items-center mt-3">
-                                <span class="text-gold-flat fw-bold">60€</span>
-                                <button class="btn btn-sm btn-outline-warning" onclick="agregarAlCarrito('Boxeo / Kickboxing', 60)">Agregar</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- ENTRENAMIENTO 3: Pilates -->
-                <div class="col-md-6 col-lg-3">
-                    <div class="card h-100 training-card border-0">
-                        <div class="training-image" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); height: 250px; display: flex; align-items: center; justify-content: center;">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" fill="#D4AF37" viewBox="0 0 16 16">
-                                <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
-                            </svg>
-                        </div>
-                        <div class="card-body d-flex flex-column">
-                            <h5 class="card-title text-gold-gradient mb-3">Pilates / Movilidad</h5>
-                            <p class="card-text small text-white flex-grow-1">Aumenta tu flexibilidad y fortalece el core con movimientos controlados.</p>
-                            <div class="d-flex justify-content-between align-items-center mt-3">
-                                <span class="text-gold-flat fw-bold">45€</span>
-                                <button class="btn btn-sm btn-outline-warning" onclick="agregarAlCarrito('Pilates / Movilidad', 45)">Agregar</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- ENTRENAMIENTO 4: Paquete Completo -->
-                <div class="col-md-6 col-lg-3">
-                    <div class="card h-100 training-card border-0">
-                        <div class="training-image" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); height: 250px; display: flex; align-items: center; justify-content: center;">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" fill="#D4AF37" viewBox="0 0 16 16">
-                                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
-                                <path d="M6.271 5.055a.5.5 0 0 1 .52.038l3.5 2.5a.5.5 0 0 1 0 .814l-3.5 2.5A.5.5 0 0 1 6 10.5v-5a.5.5 0 0 1 .271-.445z"/>
-                            </svg>
-                        </div>
-                        <div class="card-body d-flex flex-column">
-                            <h5 class="card-title text-gold-gradient mb-3">Paquete Completo</h5>
-                            <p class="card-text small text-white flex-grow-1">Acceso a todos los entrenamientos + asesoramiento personalizado.</p>
-                            <div class="d-flex justify-content-between align-items-center mt-3">
-                                <span class="text-gold-flat fw-bold">120€</span>
-                                <button class="btn btn-sm btn-outline-warning" onclick="agregarAlCarrito('Paquete Completo', 120)">Agregar</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- ENTRENAMIENTO 5: GAP -->
-                <div class="col-md-6 col-lg-3">
-                    <div class="card h-100 training-card border-0">
-                        <div class="training-image" style="background: linear-gradient(135deg, #00d2fc 0%, #3677ff 100%); height: 250px; display: flex; align-items: center; justify-content: center;">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" fill="#D4AF37" viewBox="0 0 16 16">
-                                <path d="M8 0a1 1 0 0 1 1 1v2h2V1a1 1 0 0 1 2 0v2h1a1 1 0 0 1 1 1v1h1a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2h-1v1a1 1 0 0 1-1 1h-1v1a1 1 0 0 1-2 0v-1H8v1a1 1 0 0 1-2 0v-1H5a1 1 0 0 1-1-1v-1H3a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h1V4a1 1 0 0 1 1-1h1V1a1 1 0 0 1 1-1h2zM5 5v6h6V5H5z"/>
-                            </svg>
-                        </div>
-                        <div class="card-body d-flex flex-column">
-                            <h5 class="card-title text-gold-gradient mb-3">GAP</h5>
-                            <p class="card-text small text-white flex-grow-1">Abdomen, Glúteos y Piernas. Tonifica las zonas más buscadas con ejercicios efectivos.</p>
-                            <div class="d-flex justify-content-between align-items-center mt-3">
-                                <span class="text-gold-flat fw-bold">55€</span>
-                                <button class="btn btn-sm btn-outline-warning" onclick="agregarAlCarrito('GAP', 55)">Agregar</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- ENTRENAMIENTO 6: Rehabilitación -->
-                <div class="col-md-6 col-lg-3">
-                    <div class="card h-100 training-card border-0">
-                        <div class="training-image" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); height: 250px; display: flex; align-items: center; justify-content: center;">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" fill="#D4AF37" viewBox="0 0 16 16">
-                                <path d="M8 1a1 1 0 0 1 1 1v1h-2V2a1 1 0 0 1 1-1zm5 9a1 1 0 0 1-1 1h-1v1a1 1 0 0 1-2 0v-1H7v1a1 1 0 0 1-2 0v-1H4a1 1 0 0 1-1-1V5h2V4a1 1 0 1 1 2 0v1h2V4a1 1 0 0 1 2 0v1h2v5z"/>
-                            </svg>
-                        </div>
-                        <div class="card-body d-flex flex-column">
-                            <h5 class="card-title text-gold-gradient mb-3">Rehabilitación</h5>
-                            <p class="card-text small text-white flex-grow-1">Recuperate y fortalécete con fisioterapia especializada e individualizada.</p>
-                            <div class="d-flex justify-content-between align-items-center mt-3">
-                                <span class="text-gold-flat fw-bold">65€</span>
-                                <button class="btn btn-sm btn-outline-warning" onclick="agregarAlCarrito('Rehabilitación', 65)">Agregar</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- ENTRENAMIENTO 7: Fuerza -->
-                <div class="col-md-6 col-lg-3">
-                    <div class="card h-100 training-card border-0">
-                        <div class="training-image" style="background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%); height: 250px; display: flex; align-items: center; justify-content: center;">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" fill="#D4AF37" viewBox="0 0 16 16">
-                                <path d="M9.5 1a.5.5 0 0 1 1 0v5h4a.5.5 0 0 1 0 1h-4v4a.5.5 0 0 1-1 0v-4h-4a.5.5 0 0 1 0-1h4v-5zm-4 9a.5.5 0 0 1 1 0v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3z"/>
-                            </svg>
-                        </div>
-                        <div class="card-body d-flex flex-column">
-                            <h5 class="card-title text-gold-gradient mb-3">Fuerza</h5>
-                            <p class="card-text small text-white flex-grow-1">Potencia tus músculos con entrenamientos de musculación de alta intensidad.</p>
-                            <div class="d-flex justify-content-between align-items-center mt-3">
-                                <span class="text-gold-flat fw-bold">70€</span>
-                                <button class="btn btn-sm btn-outline-warning" onclick="agregarAlCarrito('Fuerza', 70)">Agregar</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- ENTRENAMIENTO 8: Ciclo/Spinning -->
-                <div class="col-md-6 col-lg-3">
-                    <div class="card h-100 training-card border-0">
-                        <div class="training-image" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); height: 250px; display: flex; align-items: center; justify-content: center;">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" fill="#D4AF37" viewBox="0 0 16 16">
-                                <path d="M5.338 1.59a61.44 61.44 0 0 0-2.837.856.481.481 0 0 0-.328.39c-.045.1-.095.232-.151.381l-.852 4.561c-.073.39-.073.805.073 1.196l1.272 2.91a.5.5 0 0 0 .464.314l1.733-.122.584 1.953 5.332-1.226.584-1.954 1.733.123a.5.5 0 0 0 .464-.314l1.272-2.91c.146-.39.146-.806.073-1.196l-.852-4.561a.481.481 0 0 0-.328-.39c-.951-.3-1.918-.57-2.837-.856C9.335 1.582 8.907 1.5 8 1.5c-.907 0-1.335.082-2.662.59z"/>
-                            </svg>
-                        </div>
-                        <div class="card-body d-flex flex-column">
-                            <h5 class="card-title text-gold-gradient mb-3">Ciclo / Spinning</h5>
-                            <p class="card-text small text-white flex-grow-1">Quema calorías y mejora tu resistencia cardiovascular en bicicleta estática.</p>
-                            <div class="d-flex justify-content-between align-items-center mt-3">
-                                <span class="text-gold-flat fw-bold">50€</span>
-                                <button class="btn btn-sm btn-outline-warning" onclick="agregarAlCarrito('Ciclo / Spinning', 50)">Agregar</button>
-                            </div>
-                        </div>
-                    </div>
+            <!-- GRID DE ENTRENAMIENTOS (carga dinámica desde API) -->
+            <div class="row g-4 mb-5" id="gridEntrenamientos">
+                <div class="col-12 text-center py-5">
+                    <div class="spinner-border text-warning" role="status"></div>
+                    <p class="text-secondary mt-2">Cargando entrenamientos...</p>
                 </div>
             </div>
         </div>
@@ -282,7 +143,7 @@
                 <span class="fw-bold">TOTAL:</span>
                 <span class="text-gold-flat fw-bold" id="cart-total">0.00€</span>
             </div>
-            <button class="btn btn-gold w-100 py-3 fw-bold">FINALIZAR COMPRA</button>
+            <button class="btn btn-gold w-100 py-3 fw-bold" onclick="finalizarCompra()">FINALIZAR COMPRA</button>
         </div>
     </div>
 
@@ -290,90 +151,129 @@
     <script src="js/carrito.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
-    <!-- Script de búsqueda de entrenamientos -->
+    <!-- Script dinámico de entrenamientos -->
     <script>
-        // Array de entrenamientos disponibles
-        const entrenamientos = [
-            { nombre: 'Entrenamiento Funcional', precio: 50 },
-            { nombre: 'Boxeo / Kickboxing', precio: 60 },
-            { nombre: 'Pilates / Movilidad', precio: 45 },
-            { nombre: 'Paquete Completo', precio: 120 },
-            { nombre: 'GAP', precio: 55 },
-            { nombre: 'Rehabilitación', precio: 65 },
-            { nombre: 'Fuerza', precio: 70 },
-            { nombre: 'Ciclo / Spinning', precio: 50 }
+        const API_ENTRENAMIENTOS = 'php/api.php';
+        let todosLosEntrenamientos = [];
+
+        // Gradientes por defecto para artículos sin imagen
+        const gradientes = [
+            'linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)',
+            'linear-gradient(135deg, #c41e3a 0%, #8b0000 100%)',
+            'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+            'linear-gradient(135deg, #00d2fc 0%, #3677ff 100%)',
+            'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)',
+            'linear-gradient(135deg, #eb3349 0%, #f45c43 100%)',
+            'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+            'linear-gradient(135deg, #FFB347 0%, #FF8C00 100%)',
+            'linear-gradient(135deg, #13547a 0%, #80d0c7 100%)'
         ];
 
-        // Referencia a todos los elementos
+        // Cargar entrenamientos desde la API
+        async function cargarEntrenamientos() {
+            try {
+                const res = await fetch(`${API_ENTRENAMIENTOS}?action=productos`);
+                const data = await res.json();
+                if (data.success) {
+                    todosLosEntrenamientos = data.datos;
+                    renderEntrenamientos(todosLosEntrenamientos);
+                } else {
+                    document.getElementById('gridEntrenamientos').innerHTML = '<p class="text-danger text-center">Error al cargar entrenamientos</p>';
+                }
+            } catch (e) {
+                document.getElementById('gridEntrenamientos').innerHTML = '<p class="text-danger text-center">Error de conexión al cargar entrenamientos</p>';
+            }
+        }
+
+        function renderEntrenamientos(lista) {
+            const grid = document.getElementById('gridEntrenamientos');
+            if (lista.length === 0) {
+                grid.innerHTML = '<p class="text-center text-secondary py-5">No se encontraron entrenamientos.</p>';
+                return;
+            }
+            grid.innerHTML = lista.map((ent, i) => {
+                const nombre = ent.nombre;
+                const precio = parseFloat(ent.precio).toFixed(0);
+                const desc = ent.descripcion || '';
+                const id = ent.id;
+                const imgUrl = ent.imagen_url;
+                const grad = gradientes[i % gradientes.length];
+
+                const imagenHtml = imgUrl
+                    ? `<img src="${imgUrl}" alt="${nombre}" style="width:100%;height:250px;object-fit:cover;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+                       <div class="training-image" style="background:${grad};height:250px;display:none;align-items:center;justify-content:center;">
+                           <span style="font-size:3em;color:#D4AF37;">&#9733;</span>
+                       </div>`
+                    : `<div class="training-image" style="background:${grad};height:250px;display:flex;align-items:center;justify-content:center;">
+                           <span style="font-size:3em;color:#D4AF37;">&#9733;</span>
+                       </div>`;
+
+                const nombreEscapado = nombre.replace(/'/g, "\\'");
+                return `
+                <div class="col-md-6 col-lg-3 tarjeta-entrenamiento" data-nombre="${nombre.toLowerCase()}">
+                    <div class="card h-100 training-card border-0">
+                        ${imagenHtml}
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title text-gold-gradient mb-3">${nombre}</h5>
+                            <p class="card-text small text-white flex-grow-1">${desc}</p>
+                            <div class="d-flex justify-content-between align-items-center mt-3">
+                                <span class="text-gold-flat fw-bold">${precio}€</span>
+                                <button class="btn btn-sm btn-outline-warning" onclick="agregarAlCarrito('${nombreEscapado}', ${ent.precio}, ${id})">Agregar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        // Buscador
         const formBuscador = document.getElementById('formBuscadorEntrenamientos');
         const inputBuscador = document.getElementById('buscadorEntrenamientosInput');
         const btnLimpiar = document.getElementById('limpiarBuscadorEntrenamiento');
         const contadorResultados = document.getElementById('contadorResultados');
-        const galeriaEntrenamientos = document.querySelector('.row.g-4.mb-5');
 
-        // Guardar las tarjetas originales
-        const tarjetasOriginales = Array.from(galeriaEntrenamientos.querySelectorAll('[class*="col-md-6"]'));
-
-        // Evento del formulario para buscar
         formBuscador.addEventListener('submit', function(e) {
             e.preventDefault();
-            const termino = inputBuscador.value.trim().toLowerCase();
-            filtrarEntrenamientos(termino);
+            filtrarEntrenamientos(inputBuscador.value.trim().toLowerCase());
         });
 
-        // Evento mientras escribe (búsqueda en tiempo real)
         inputBuscador.addEventListener('keyup', function() {
             const termino = this.value.trim().toLowerCase();
             if (termino.length > 0) {
                 filtrarEntrenamientos(termino);
                 btnLimpiar.style.display = 'block';
             } else {
-                mostrarTodos();
+                renderEntrenamientos(todosLosEntrenamientos);
+                contadorResultados.textContent = '';
                 btnLimpiar.style.display = 'none';
             }
         });
 
-        // Botón limpiar búsqueda
         btnLimpiar.addEventListener('click', function() {
             inputBuscador.value = '';
-            mostrarTodos();
+            renderEntrenamientos(todosLosEntrenamientos);
+            contadorResultados.textContent = '';
             btnLimpiar.style.display = 'none';
         });
 
-        // Función para filtrar entrenamientos
         function filtrarEntrenamientos(termino) {
-            const resultados = entrenamientos.filter(ent => 
+            const resultados = todosLosEntrenamientos.filter(ent =>
                 ent.nombre.toLowerCase().includes(termino)
             );
+            renderEntrenamientos(resultados);
 
-            // Mostrar/ocultar tarjetas según coincidencia
-            tarjetasOriginales.forEach((tarjeta, index) => {
-                const nombreEntrenamiento = entrenamientos[index].nombre.toLowerCase();
-                if (nombreEntrenamiento.includes(termino)) {
-                    tarjeta.style.display = 'block';
-                } else {
-                    tarjeta.style.display = 'none';
-                }
-            });
-
-            // Actualizar contador
-            const cantidadMostrada = resultados.length;
-            if (cantidadMostrada === 0) {
+            if (resultados.length === 0) {
                 contadorResultados.textContent = 'No se encontraron entrenamientos que coincidan con tu búsqueda.';
                 contadorResultados.style.color = '#f5576c';
             } else {
-                contadorResultados.textContent = `Se encontraron ${cantidadMostrada} entrenamiento${cantidadMostrada !== 1 ? 's' : ''} que coinciden.`;
+                contadorResultados.textContent = `Se encontraron ${resultados.length} entrenamiento${resultados.length !== 1 ? 's' : ''} que coinciden.`;
                 contadorResultados.style.color = '#D4AF37';
             }
         }
 
-        // Función para mostrar todos los entrenamientos
-        function mostrarTodos() {
-            tarjetasOriginales.forEach(tarjeta => {
-                tarjeta.style.display = 'block';
-            });
-            contadorResultados.textContent = '';
-        }
+        // Iniciar carga
+        cargarEntrenamientos();
     </script>
 </body>
 

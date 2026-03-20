@@ -1,23 +1,68 @@
 <?php
 /**
  * API REST - Athlos Forge
- * Archivo principal que gestiona todas las peticiones
+ * Gestiona todas las peticiones de la plataforma
  * 
- * Endpoints disponibles:
- * - POST /api.php?action=login - Iniciar sesión
- * - POST /api.php?action=register - Crear cuenta
- * - GET /api.php?action=productos - Obtener productos
- * - POST /api.php?action=carrito - Agregar al carrito
- * - POST /api.php?action=pedido - Crear pedido
- * - GET /api.php?action=pedidos - Obtener pedidos del usuario
+ * Autenticación: Sesiones PHP (cookies)
+ * Roles: cliente (registro, carrito, pedidos) | administrador (todo)
+ * Seguridad: PDO prepared statements, bcrypt passwords, AES tarjetas
+ *
+ * ENDPOINTS:
+ * ── Autenticación ──
+ * POST ?action=login              Iniciar sesión
+ * POST ?action=register           Crear cuenta (actualiza BBDD)
+ * POST ?action=logout             Cerrar sesión
+ * GET  ?action=sesion             Estado de la sesión actual
+ *
+ * ── Productos / Categorías ──
+ * GET  ?action=productos          Listar productos (filtro: ?categoria=)
+ * GET  ?action=producto&id=       Producto por ID
+ * GET  ?action=categorias         Listar categorías
+ * GET  ?action=buscar&q=          Buscar artículos
+ *
+ * ── Carrito (requiere sesión - cliente) ──
+ * POST ?action=carrito_agregar    Agregar al carrito (valida stock, duplicados)
+ * GET  ?action=carrito_obtener    Ver carrito del usuario
+ * POST ?action=carrito_eliminar   Eliminar item del carrito
+ * POST ?action=carrito_actualizar Actualizar cantidad de un item
+ *
+ * ── Pedidos (requiere sesión - cliente) ──
+ * POST ?action=crear_pedido       Finalizar compra (tarjeta, email confirmación)
+ * GET  ?action=obtener_pedidos    Pedidos del usuario
+ * GET  ?action=obtener_pedido&id= Detalle de un pedido
+ *
+ * ── Usuario (requiere sesión) ──
+ * GET  ?action=perfil             Ver perfil
+ * POST ?action=actualizar_perfil  Actualizar perfil
+ *
+ * ── Opiniones ──
+ * POST ?action=crear_opinion      Crear opinión (requiere sesión)
+ * GET  ?action=obtener_opiniones  Ver opiniones de un artículo
+ *
+ * ── Admin (requiere sesión - administrador) ──
+ * GET  ?action=admin_usuarios     Listar todos los usuarios
+ * POST ?action=admin_crear_articulo   Crear artículo
+ * POST ?action=admin_editar_articulo  Editar artículo
+ * POST ?action=admin_eliminar_articulo Eliminar artículo
+ * POST ?action=admin_actualizar_stock Actualizar stock
+ * GET  ?action=admin_pedidos      Ver todos los pedidos
+ * POST ?action=admin_estado_pedido Cambiar estado de pedido
  */
 
 header('Content-Type: application/json; charset=utf-8');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type, Authorization');
 
-// Permitir peticiones OPTIONS
+// CORS dinámico: permitir localhost con cualquier esquema/puerto
+$origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+$allowed_origins = ['http://localhost', 'http://127.0.0.1', 'http://localhost:80', 'http://127.0.0.1:80'];
+if (in_array($origin, $allowed_origins)) {
+    header("Access-Control-Allow-Origin: $origin");
+} else {
+    header('Access-Control-Allow-Origin: http://localhost');
+}
+header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type');
+header('Access-Control-Allow-Credentials: true');
+
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
     exit;
@@ -25,110 +70,74 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 require_once 'db.php';
 
-// Obtener la acción solicitada
+// Evitar que warnings/notices de PHP corrompan la respuesta JSON
+error_reporting(0);
+ini_set('display_errors', '0');
+
 $action = isset($_GET['action']) ? $_GET['action'] : null;
 
-// Encaminar a la función correspondiente
 switch ($action) {
-    // ============ AUTENTICACIÓN ============
-    case 'login':
-        handleLogin();
-        break;
-    
-    case 'register':
-        handleRegister();
-        break;
-    
-    case 'logout':
-        handleLogout();
-        break;
+    // ── Autenticación ──
+    case 'login':           handleLogin(); break;
+    case 'register':        handleRegister(); break;
+    case 'logout':          handleLogout(); break;
+    case 'sesion':          handleSesion(); break;
 
-    // ============ PRODUCTOS ============
-    case 'productos':
-        getProductos();
-        break;
-    
-    case 'producto':
-        getProductoById();
-        break;
-    
-    case 'categorias':
-        getCategorias();
-        break;
+    // ── Productos ──
+    case 'productos':       getProductos(); break;
+    case 'producto':        getProductoById(); break;
+    case 'categorias':      getCategorias(); break;
+    case 'buscar':          buscarArticulos(); break;
 
-    // ============ CARRITO ============
-    case 'carrito_agregar':
-        agregarAlCarrito();
-        break;
-    
-    case 'carrito_obtener':
-        obtenerCarrito();
-        break;
-    
-    case 'carrito_eliminar':
-        eliminarDelCarrito();
-        break;
+    // ── Carrito ──
+    case 'carrito_agregar':     agregarAlCarrito(); break;
+    case 'carrito_obtener':     obtenerCarrito(); break;
+    case 'carrito_eliminar':    eliminarDelCarrito(); break;
+    case 'carrito_actualizar':  actualizarCantidadCarrito(); break;
 
-    // ============ PEDIDOS ============
-    case 'crear_pedido':
-        crearPedido();
-        break;
-    
-    case 'obtener_pedidos':
-        obtenerPedidos();
-        break;
-    
-    case 'obtener_pedido':
-        obtenerPedidoById();
-        break;
+    // ── Pedidos ──
+    case 'crear_pedido':    crearPedido(); break;
+    case 'obtener_pedidos': obtenerPedidos(); break;
+    case 'obtener_pedido':  obtenerPedidoById(); break;
 
-    // ============ USUARIO ============
-    case 'perfil':
-        obtenerPerfil();
-        break;
-    
-    case 'actualizar_perfil':
-        actualizarPerfil();
-        break;
+    // ── Usuario ──
+    case 'perfil':          obtenerPerfil(); break;
+    case 'actualizar_perfil': actualizarPerfil(); break;
 
-    // ============ OPINIONES ============
-    case 'crear_opinion':
-        crearOpinion();
-        break;
-    
-    case 'obtener_opiniones':
-        obtenerOpiniones();
-        break;
+    // ── Opiniones ──
+    case 'crear_opinion':       crearOpinion(); break;
+    case 'obtener_opiniones':   obtenerOpiniones(); break;
 
-    // ============ BÚSQUEDA ============
-    case 'buscar':
-        buscarArticulos();
-        break;
+    // ── Admin ──
+    case 'admin_usuarios':          adminListarUsuarios(); break;
+    case 'admin_crear_articulo':    adminCrearArticulo(); break;
+    case 'admin_editar_articulo':   adminEditarArticulo(); break;
+    case 'admin_eliminar_articulo': adminEliminarArticulo(); break;
+    case 'admin_actualizar_stock':  adminActualizarStock(); break;
+    case 'admin_pedidos':           adminListarPedidos(); break;
+    case 'admin_estado_pedido':     adminCambiarEstadoPedido(); break;
 
     default:
         http_response_code(400);
         echo json_encode([
             'success' => false,
-            'mensaje' => 'Acción no encontrada'
+            'mensaje' => 'Acción no válida: ' . htmlspecialchars($action ?? 'ninguna')
         ]);
         break;
 }
 
-// ========================================
-// FUNCIONES DE AUTENTICACIÓN
-// ========================================
+// ====================================================
+// AUTENTICACIÓN
+// ====================================================
 
 function handleLogin() {
     global $pdo;
-    
+
     $input = json_decode(file_get_contents('php://input'), true);
-    
+
     if (empty($input['email']) || empty($input['password'])) {
         http_response_code(400);
-        echo json_encode([
-            'success' => false,
-            'mensaje' => 'Email y contraseña son requeridos'
-        ]);
+        echo json_encode(['success' => false, 'mensaje' => 'Email y contraseña son requeridos']);
         return;
     }
 
@@ -139,36 +148,23 @@ function handleLogin() {
 
         if (!$usuario || !verifyPassword($input['password'], $usuario['password'])) {
             http_response_code(401);
-            echo json_encode([
-                'success' => false,
-                'mensaje' => 'Credenciales inválidas'
-            ]);
+            echo json_encode(['success' => false, 'mensaje' => 'Credenciales inválidas']);
             return;
         }
 
         if ($usuario['estado'] !== 'activo') {
             http_response_code(403);
-            echo json_encode([
-                'success' => false,
-                'mensaje' => 'Usuario no activo'
-            ]);
+            echo json_encode(['success' => false, 'mensaje' => 'Tu cuenta está ' . $usuario['estado']]);
             return;
         }
 
-        // Actualizar última sesión
-        $stmt = $pdo->prepare('UPDATE usuarios SET fecha_ultima_sesion = NOW() WHERE id = ?');
-        $stmt->execute([$usuario['id']]);
-
-        // Generar token
-        $token = generateToken($usuario['id']);
-
-        // Registrar en logs
+        // Iniciar sesión PHP
+        iniciarSesion($usuario);
         registrarLog('LOGIN_EXITOSO', $usuario['id'], 'Usuario ' . $usuario['email'] . ' inició sesión');
 
         echo json_encode([
             'success' => true,
             'mensaje' => 'Inicio de sesión exitoso',
-            'token' => $token,
             'usuario' => [
                 'id' => $usuario['id'],
                 'nombre' => $usuario['nombre'],
@@ -179,28 +175,21 @@ function handleLogin() {
         ]);
     } catch (Exception $e) {
         http_response_code(500);
-        echo json_encode([
-            'success' => false,
-            'mensaje' => 'Error al procesar la solicitud',
-            'debug' => $e->getMessage()
-        ]);
+        echo json_encode(['success' => false, 'mensaje' => 'Error al procesar la solicitud']);
     }
 }
 
 function handleRegister() {
     global $pdo;
-    
+
     $input = json_decode(file_get_contents('php://input'), true);
 
-    // Validar datos requeridos
-    $campos_requeridos = ['nombre', 'apellidos', 'email', 'password', 'genero', 'fecha_nacimiento', 'direccion', 'pais'];
+    // Validar campos obligatorios
+    $campos_requeridos = ['nombre', 'email', 'password'];
     foreach ($campos_requeridos as $campo) {
         if (empty($input[$campo])) {
             http_response_code(400);
-            echo json_encode([
-                'success' => false,
-                'mensaje' => "El campo '$campo' es requerido"
-            ]);
+            echo json_encode(['success' => false, 'mensaje' => "El campo '$campo' es requerido"]);
             return;
         }
     }
@@ -208,136 +197,141 @@ function handleRegister() {
     // Validar email
     if (!filter_var($input['email'], FILTER_VALIDATE_EMAIL)) {
         http_response_code(400);
-        echo json_encode([
-            'success' => false,
-            'mensaje' => 'Email inválido'
-        ]);
+        echo json_encode(['success' => false, 'mensaje' => 'Email inválido']);
+        return;
+    }
+
+    // Validar contraseña fuerte
+    if (!preg_match('/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/', $input['password'])) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'mensaje' => 'La contraseña debe tener mín. 8 caracteres, 1 mayúscula, 1 minúscula, 1 número y 1 símbolo']);
         return;
     }
 
     try {
-        // Verificar si el email ya existe
+        // Verificar email duplicado
         $stmt = $pdo->prepare('SELECT id FROM usuarios WHERE email = ?');
         $stmt->execute([$input['email']]);
         if ($stmt->fetch()) {
             http_response_code(409);
-            echo json_encode([
-                'success' => false,
-                'mensaje' => 'El email ya está registrado'
-            ]);
+            echo json_encode(['success' => false, 'mensaje' => 'El email ya está registrado']);
             return;
         }
 
-        // Hash de contraseña
+        // Hash de contraseña (bcrypt)
         $password_hash = hashPassword($input['password']);
 
-        // Insertar usuario
+        // Cifrar tarjeta de crédito (AES-256-CBC) si se proporcionó
+        $tarjeta_cifrada = null;
+        if (!empty($input['tarjeta'])) {
+            $tarjeta_cifrada = encriptarTarjeta($input['tarjeta']);
+        }
+
+        // Insertar usuario en la BBDD
         $stmt = $pdo->prepare('
             INSERT INTO usuarios 
-            (nombre, apellidos, email, password, rol, genero, fecha_nacimiento, direccion, pais, tarjeta_credito, notificaciones, estado)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            (nombre, apellidos, email, password, rol, genero, fecha_nacimiento, 
+             direccion, pais, tarjeta_credito, telefono, notificaciones, estado)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ');
-
         $stmt->execute([
-            $input['nombre'],
-            $input['apellidos'],
+            htmlspecialchars($input['nombre']),
+            htmlspecialchars($input['apellidos'] ?? ''),
             $input['email'],
             $password_hash,
             'cliente',
-            $input['genero'],
-            $input['fecha_nacimiento'],
-            $input['direccion'],
-            $input['pais'],
-            $input['tarjeta'] ?? null,
-            $input['notificaciones'] ?? false,
+            !empty($input['genero']) ? $input['genero'] : null,
+            !empty($input['fecha_nacimiento']) ? $input['fecha_nacimiento'] : (!empty($input['nacimiento']) ? $input['nacimiento'] : null),
+            !empty($input['direccion']) ? htmlspecialchars($input['direccion']) : null,
+            !empty($input['pais']) ? htmlspecialchars($input['pais']) : null,
+            $tarjeta_cifrada,
+            $input['telefono'] ?? null,
+            !empty($input['notificaciones']) ? 1 : 0,
             'activo'
         ]);
 
         $user_id = $pdo->lastInsertId();
 
-        // Generar token
-        $token = generateToken($user_id);
+        // Iniciar sesión automáticamente tras registro
+        $nuevo_usuario = [
+            'id' => $user_id,
+            'nombre' => $input['nombre'],
+            'email' => $input['email'],
+            'rol' => 'cliente'
+        ];
+        iniciarSesion($nuevo_usuario);
 
-        // Registrar en logs
-        registrarLog('REGISTRO_EXITOSO', $user_id, 'Nuevo usuario registrado: ' . $input['email']);
+        registrarLog('REGISTRO_EXITOSO', $user_id, 'Nuevo usuario: ' . $input['email']);
 
         echo json_encode([
             'success' => true,
-            'mensaje' => 'Registro exitoso',
-            'token' => $token,
+            'mensaje' => 'Registro exitoso. Sesión iniciada.',
             'usuario' => [
                 'id' => $user_id,
                 'nombre' => $input['nombre'],
-                'apellidos' => $input['apellidos'],
+                'apellidos' => $input['apellidos'] ?? '',
                 'email' => $input['email'],
                 'rol' => 'cliente'
             ]
         ]);
     } catch (Exception $e) {
         http_response_code(500);
-        echo json_encode([
-            'success' => false,
-            'mensaje' => 'Error al registrar',
-            'debug' => $e->getMessage()
-        ]);
+        echo json_encode(['success' => false, 'mensaje' => 'Error al registrar']);
     }
 }
 
 function handleLogout() {
-    // En una aplicación real, invalidar el token aquí
-    echo json_encode([
-        'success' => true,
-        'mensaje' => 'Sesión cerrada'
-    ]);
+    $usuario = getUsuarioSesion();
+    if ($usuario) {
+        registrarLog('LOGOUT', $usuario['id'], 'Sesión cerrada');
+    }
+    cerrarSesion();
+    echo json_encode(['success' => true, 'mensaje' => 'Sesión cerrada correctamente']);
 }
 
-// ========================================
-// FUNCIONES DE PRODUCTOS
-// ========================================
+function handleSesion() {
+    $usuario = getUsuarioSesion();
+    if ($usuario) {
+        echo json_encode(['success' => true, 'autenticado' => true, 'usuario' => $usuario]);
+    } else {
+        echo json_encode(['success' => true, 'autenticado' => false]);
+    }
+}
+
+// ====================================================
+// PRODUCTOS / CATEGORÍAS
+// ====================================================
 
 function getProductos() {
     global $pdo;
 
-    $categoria = isset($_GET['categoria']) ? $_GET['categoria'] : null;
-    $query = 'SELECT id, nombre, descripcion, precio, stock, id_categoria, imagen_url FROM articulos WHERE disponible = TRUE';
+    $categoria = isset($_GET['categoria']) ? (int)$_GET['categoria'] : null;
+    $query = 'SELECT id, nombre, descripcion, precio, stock, id_categoria, imagen_url, disponible FROM articulos WHERE disponible = TRUE';
     $params = [];
 
     if ($categoria) {
         $query .= ' AND id_categoria = ?';
         $params[] = $categoria;
     }
-
     $query .= ' ORDER BY nombre ASC';
 
     try {
         $stmt = $pdo->prepare($query);
         $stmt->execute($params);
-        $productos = $stmt->fetchAll();
-
-        echo json_encode([
-            'success' => true,
-            'datos' => $productos
-        ]);
+        echo json_encode(['success' => true, 'datos' => $stmt->fetchAll()]);
     } catch (Exception $e) {
         http_response_code(500);
-        echo json_encode([
-            'success' => false,
-            'mensaje' => 'Error al obtener productos'
-        ]);
+        echo json_encode(['success' => false, 'mensaje' => 'Error al obtener productos']);
     }
 }
 
 function getProductoById() {
     global $pdo;
-
-    $id = isset($_GET['id']) ? $_GET['id'] : null;
+    $id = isset($_GET['id']) ? (int)$_GET['id'] : null;
 
     if (!$id) {
         http_response_code(400);
-        echo json_encode([
-            'success' => false,
-            'mensaje' => 'ID de producto requerido'
-        ]);
+        echo json_encode(['success' => false, 'mensaje' => 'ID de producto requerido']);
         return;
     }
 
@@ -346,136 +340,191 @@ function getProductoById() {
             SELECT a.*, c.nombre as categoria_nombre 
             FROM articulos a
             LEFT JOIN categorias c ON a.id_categoria = c.id
-            WHERE a.id = ? AND a.disponible = TRUE
+            WHERE a.id = ?
         ');
         $stmt->execute([$id]);
         $producto = $stmt->fetch();
 
         if (!$producto) {
             http_response_code(404);
-            echo json_encode([
-                'success' => false,
-                'mensaje' => 'Producto no encontrado'
-            ]);
+            echo json_encode(['success' => false, 'mensaje' => 'Producto no encontrado. Este artículo no existe en nuestro catálogo.']);
             return;
         }
 
-        echo json_encode([
-            'success' => true,
-            'datos' => $producto
-        ]);
+        echo json_encode(['success' => true, 'datos' => $producto]);
     } catch (Exception $e) {
         http_response_code(500);
-        echo json_encode([
-            'success' => false,
-            'mensaje' => 'Error al obtener producto'
-        ]);
+        echo json_encode(['success' => false, 'mensaje' => 'Error al obtener producto']);
     }
 }
 
 function getCategorias() {
     global $pdo;
-
     try {
         $stmt = $pdo->query('SELECT id, nombre, descripcion, imagen_url FROM categorias ORDER BY nombre ASC');
-        $categorias = $stmt->fetchAll();
-
-        echo json_encode([
-            'success' => true,
-            'datos' => $categorias
-        ]);
+        echo json_encode(['success' => true, 'datos' => $stmt->fetchAll()]);
     } catch (Exception $e) {
         http_response_code(500);
-        echo json_encode([
-            'success' => false,
-            'mensaje' => 'Error al obtener categorías'
-        ]);
+        echo json_encode(['success' => false, 'mensaje' => 'Error al obtener categorías']);
     }
 }
 
-// ========================================
-// FUNCIONES DE CARRITO
-// ========================================
-
-function agregarAlCarrito() {
+function buscarArticulos() {
     global $pdo;
+    $termino = isset($_GET['q']) ? $_GET['q'] : '';
 
-    $input = json_decode(file_get_contents('php://input'), true);
-
-    if (empty($input['id_articulo']) || empty($input['id_usuario'])) {
+    if (strlen($termino) < 2) {
         http_response_code(400);
-        echo json_encode([
-            'success' => false,
-            'mensaje' => 'ID de artículo e ID de usuario requeridos'
-        ]);
+        echo json_encode(['success' => false, 'mensaje' => 'El término debe tener al menos 2 caracteres']);
         return;
     }
 
     try {
-        // Verificar que el artículo existe y tiene stock
-        $stmt = $pdo->prepare('SELECT precio, stock FROM articulos WHERE id = ?');
-        $stmt->execute([$input['id_articulo']]);
+        $busqueda = '%' . $termino . '%';
+        $stmt = $pdo->prepare('
+            SELECT a.id, a.nombre, a.descripcion, a.precio, a.stock, a.id_categoria, 
+                   a.imagen_url, a.disponible, c.nombre as categoria_nombre
+            FROM articulos a
+            LEFT JOIN categorias c ON a.id_categoria = c.id
+            WHERE a.disponible = TRUE AND (a.nombre LIKE ? OR a.descripcion LIKE ?)
+            ORDER BY a.nombre ASC
+        ');
+        $stmt->execute([$busqueda, $busqueda]);
+        $resultados = $stmt->fetchAll();
+
+        echo json_encode([
+            'success' => true,
+            'total' => count($resultados),
+            'termino' => htmlspecialchars($termino),
+            'datos' => $resultados
+        ]);
+    } catch (Exception $e) {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'mensaje' => 'Error al buscar']);
+    }
+}
+
+// ====================================================
+// CARRITO DE COMPRAS (con validaciones de stock, duplicados, totales)
+// ====================================================
+
+function agregarAlCarrito() {
+    global $pdo;
+    $usuario = requiereAutenticacion();
+    $input = json_decode(file_get_contents('php://input'), true);
+
+    if (empty($input['id_articulo'])) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'mensaje' => 'ID de artículo requerido']);
+        return;
+    }
+
+    $id_articulo = (int)$input['id_articulo'];
+    $cantidad = isset($input['cantidad']) ? max(1, (int)$input['cantidad']) : 1;
+
+    try {
+        // 1. Verificar que el artículo EXISTE
+        $stmt = $pdo->prepare('SELECT id, nombre, precio, stock, disponible FROM articulos WHERE id = ?');
+        $stmt->execute([$id_articulo]);
         $articulo = $stmt->fetch();
 
         if (!$articulo) {
             http_response_code(404);
             echo json_encode([
                 'success' => false,
-                'mensaje' => 'Artículo no encontrado'
+                'mensaje' => 'El producto no existe. Verifica el artículo e inténtalo de nuevo.',
+                'tipo_error' => 'producto_inexistente'
             ]);
             return;
         }
 
-        $cantidad = $input['cantidad'] ?? 1;
-
-        if ($articulo['stock'] < $cantidad) {
+        // 2. Verificar que está DISPONIBLE
+        if (!$articulo['disponible']) {
             http_response_code(400);
             echo json_encode([
                 'success' => false,
-                'mensaje' => 'Stock insuficiente'
+                'mensaje' => 'El producto "' . $articulo['nombre'] . '" no está disponible actualmente.',
+                'tipo_error' => 'no_disponible'
             ]);
             return;
         }
 
-        // Agregar al carrito
+        // 3. Verificar STOCK
+        if ($articulo['stock'] <= 0) {
+            http_response_code(400);
+            echo json_encode([
+                'success' => false,
+                'mensaje' => 'El producto "' . $articulo['nombre'] . '" está agotado (sin stock).',
+                'tipo_error' => 'sin_stock'
+            ]);
+            return;
+        }
+
+        // 4. Verificar si ya existe en el CARRITO (duplicado)
+        $stmt = $pdo->prepare('SELECT id, cantidad FROM carrito_sesion WHERE id_usuario = ? AND id_articulo = ?');
+        $stmt->execute([$usuario['id'], $id_articulo]);
+        $existente = $stmt->fetch();
+
+        if ($existente) {
+            // Actualizar cantidad si ya existe
+            $nueva_cantidad = $existente['cantidad'] + $cantidad;
+
+            // Verificar stock para la nueva cantidad total
+            if ($nueva_cantidad > $articulo['stock']) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'mensaje' => 'Stock insuficiente para "' . $articulo['nombre'] . '". ' .
+                                 'Ya tienes ' . $existente['cantidad'] . ' en el carrito. ' .
+                                 'Stock disponible: ' . $articulo['stock'],
+                    'tipo_error' => 'stock_insuficiente'
+                ]);
+                return;
+            }
+
+            $stmt = $pdo->prepare('UPDATE carrito_sesion SET cantidad = ?, precio_unitario = ? WHERE id = ?');
+            $stmt->execute([$nueva_cantidad, $articulo['precio'], $existente['id']]);
+
+            echo json_encode([
+                'success' => true,
+                'mensaje' => 'Cantidad actualizada para "' . $articulo['nombre'] . '" (' . $nueva_cantidad . ' uds.)',
+                'duplicado' => true
+            ]);
+            return;
+        }
+
+        // 5. Verificar stock disponible para la cantidad solicitada
+        if ($cantidad > $articulo['stock']) {
+            http_response_code(400);
+            echo json_encode([
+                'success' => false,
+                'mensaje' => 'Stock insuficiente para "' . $articulo['nombre'] . '". ' .
+                             'Stock disponible: ' . $articulo['stock'] . '. Solicitado: ' . $cantidad,
+                'tipo_error' => 'stock_insuficiente'
+            ]);
+            return;
+        }
+
+        // 6. Agregar al carrito
         $stmt = $pdo->prepare('
             INSERT INTO carrito_sesion (id_usuario, id_articulo, cantidad, precio_unitario)
             VALUES (?, ?, ?, ?)
         ');
-
-        $stmt->execute([
-            $input['id_usuario'],
-            $input['id_articulo'],
-            $cantidad,
-            $articulo['precio']
-        ]);
+        $stmt->execute([$usuario['id'], $id_articulo, $cantidad, $articulo['precio']]);
 
         echo json_encode([
             'success' => true,
-            'mensaje' => 'Artículo agregado al carrito'
+            'mensaje' => '"' . $articulo['nombre'] . '" añadido al carrito correctamente'
         ]);
     } catch (Exception $e) {
         http_response_code(500);
-        echo json_encode([
-            'success' => false,
-            'mensaje' => 'Error al agregar al carrito'
-        ]);
+        echo json_encode(['success' => false, 'mensaje' => 'Error al agregar al carrito']);
     }
 }
 
 function obtenerCarrito() {
     global $pdo;
-
-    $id_usuario = isset($_GET['id_usuario']) ? $_GET['id_usuario'] : null;
-
-    if (!$id_usuario) {
-        http_response_code(400);
-        echo json_encode([
-            'success' => false,
-            'mensaje' => 'ID de usuario requerido'
-        ]);
-        return;
-    }
+    $usuario = requiereAutenticacion();
 
     try {
         $stmt = $pdo->prepare('
@@ -483,363 +532,507 @@ function obtenerCarrito() {
                 cs.id,
                 a.id as id_articulo,
                 a.nombre,
+                a.descripcion,
                 cs.cantidad,
                 cs.precio_unitario,
-                (cs.cantidad * cs.precio_unitario) as subtotal
+                (cs.cantidad * cs.precio_unitario) as subtotal,
+                a.stock,
+                a.imagen_url
             FROM carrito_sesion cs
             JOIN articulos a ON cs.id_articulo = a.id
             WHERE cs.id_usuario = ?
             ORDER BY cs.fecha_agregado DESC
         ');
-        $stmt->execute([$id_usuario]);
+        $stmt->execute([$usuario['id']]);
         $carrito = $stmt->fetchAll();
 
-        $total = array_sum(array_column($carrito, 'subtotal'));
+        $total = 0;
+        $items_sin_stock = [];
+        foreach ($carrito as &$item) {
+            $total += $item['subtotal'];
+            // Marcar items con problemas de stock
+            if ($item['cantidad'] > $item['stock']) {
+                $item['aviso_stock'] = 'Solo quedan ' . $item['stock'] . ' unidades disponibles';
+                $items_sin_stock[] = $item['nombre'];
+            }
+        }
 
         echo json_encode([
             'success' => true,
             'datos' => $carrito,
-            'total' => $total
+            'total' => round($total, 2),
+            'num_items' => count($carrito),
+            'avisos' => $items_sin_stock
         ]);
     } catch (Exception $e) {
         http_response_code(500);
-        echo json_encode([
-            'success' => false,
-            'mensaje' => 'Error al obtener carrito'
-        ]);
+        echo json_encode(['success' => false, 'mensaje' => 'Error al obtener carrito']);
     }
 }
 
 function eliminarDelCarrito() {
     global $pdo;
-
+    $usuario = requiereAutenticacion();
     $input = json_decode(file_get_contents('php://input'), true);
 
     if (empty($input['id'])) {
         http_response_code(400);
-        echo json_encode([
-            'success' => false,
-            'mensaje' => 'ID del item requerido'
-        ]);
+        echo json_encode(['success' => false, 'mensaje' => 'ID del item requerido']);
         return;
     }
 
     try {
-        $stmt = $pdo->prepare('DELETE FROM carrito_sesion WHERE id = ?');
-        $stmt->execute([$input['id']]);
+        // Verificar que el item pertenece al usuario
+        $stmt = $pdo->prepare('DELETE FROM carrito_sesion WHERE id = ? AND id_usuario = ?');
+        $stmt->execute([(int)$input['id'], $usuario['id']]);
 
-        echo json_encode([
-            'success' => true,
-            'mensaje' => 'Item eliminado del carrito'
-        ]);
+        if ($stmt->rowCount() === 0) {
+            http_response_code(404);
+            echo json_encode(['success' => false, 'mensaje' => 'Item no encontrado en tu carrito']);
+            return;
+        }
+
+        echo json_encode(['success' => true, 'mensaje' => 'Item eliminado del carrito']);
     } catch (Exception $e) {
         http_response_code(500);
-        echo json_encode([
-            'success' => false,
-            'mensaje' => 'Error al eliminar del carrito'
-        ]);
+        echo json_encode(['success' => false, 'mensaje' => 'Error al eliminar del carrito']);
     }
 }
 
-// ========================================
-// FUNCIONES DE PEDIDOS
-// ========================================
-
-function crearPedido() {
+function actualizarCantidadCarrito() {
     global $pdo;
-
+    $usuario = requiereAutenticacion();
     $input = json_decode(file_get_contents('php://input'), true);
 
-    if (empty($input['id_usuario'])) {
+    if (empty($input['id']) || !isset($input['cantidad'])) {
         http_response_code(400);
-        echo json_encode([
-            'success' => false,
-            'mensaje' => 'ID de usuario requerido'
-        ]);
+        echo json_encode(['success' => false, 'mensaje' => 'ID del item y cantidad requeridos']);
         return;
     }
 
+    $cantidad = max(1, (int)$input['cantidad']);
+
     try {
-        // Comenzar transacción
-        $pdo->beginTransaction();
-
-        // Obtener carrito del usuario
+        // Obtener item y verificar stock
         $stmt = $pdo->prepare('
-            SELECT id, id_articulo, cantidad, precio_unitario 
-            FROM carrito_sesion 
-            WHERE id_usuario = ?
+            SELECT cs.id, a.stock, a.nombre 
+            FROM carrito_sesion cs 
+            JOIN articulos a ON cs.id_articulo = a.id 
+            WHERE cs.id = ? AND cs.id_usuario = ?
         ');
-        $stmt->execute([$input['id_usuario']]);
-        $carrito = $stmt->fetchAll();
+        $stmt->execute([(int)$input['id'], $usuario['id']]);
+        $item = $stmt->fetch();
 
-        if (empty($carrito)) {
+        if (!$item) {
+            http_response_code(404);
+            echo json_encode(['success' => false, 'mensaje' => 'Item no encontrado en tu carrito']);
+            return;
+        }
+
+        if ($cantidad > $item['stock']) {
             http_response_code(400);
             echo json_encode([
                 'success' => false,
-                'mensaje' => 'El carrito está vacío'
+                'mensaje' => 'Stock insuficiente para "' . $item['nombre'] . '". Máximo disponible: ' . $item['stock'],
+                'tipo_error' => 'stock_insuficiente'
             ]);
             return;
         }
 
-        // Calcular total
+        $stmt = $pdo->prepare('UPDATE carrito_sesion SET cantidad = ? WHERE id = ? AND id_usuario = ?');
+        $stmt->execute([$cantidad, (int)$input['id'], $usuario['id']]);
+
+        echo json_encode(['success' => true, 'mensaje' => 'Cantidad actualizada']);
+    } catch (Exception $e) {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'mensaje' => 'Error al actualizar cantidad']);
+    }
+}
+
+// ====================================================
+// PEDIDOS (Checkout con tarjeta + email confirmación)
+// ====================================================
+
+function crearPedido() {
+    global $pdo;
+    $usuario = requiereAutenticacion();
+    $input = json_decode(file_get_contents('php://input'), true);
+
+    try {
+        $pdo->beginTransaction();
+
+        // 1. Obtener carrito del usuario
+        $stmt = $pdo->prepare('
+            SELECT cs.id, cs.id_articulo, cs.cantidad, cs.precio_unitario, 
+                   a.nombre, a.stock, a.disponible
+            FROM carrito_sesion cs
+            JOIN articulos a ON cs.id_articulo = a.id
+            WHERE cs.id_usuario = ?
+        ');
+        $stmt->execute([$usuario['id']]);
+        $carrito = $stmt->fetchAll();
+
+        if (empty($carrito)) {
+            $pdo->rollBack();
+            http_response_code(400);
+            echo json_encode(['success' => false, 'mensaje' => 'El carrito está vacío']);
+            return;
+        }
+
+        // 2. Validar stock de TODOS los items antes de procesar
+        $errores_stock = [];
         $total = 0;
         foreach ($carrito as $item) {
+            if (!$item['disponible']) {
+                $errores_stock[] = '"' . $item['nombre'] . '" ya no está disponible';
+            } elseif ($item['cantidad'] > $item['stock']) {
+                $errores_stock[] = '"' . $item['nombre'] . '": stock insuficiente (quedan ' . $item['stock'] . ')';
+            }
             $total += $item['cantidad'] * $item['precio_unitario'];
         }
 
-        // Crear pedido
-        $numero_pedido = 'PED-' . date('YmdHis');
+        if (!empty($errores_stock)) {
+            $pdo->rollBack();
+            http_response_code(400);
+            echo json_encode([
+                'success' => false,
+                'mensaje' => 'No se puede completar el pedido. Problemas de stock:',
+                'errores' => $errores_stock,
+                'tipo_error' => 'stock_insuficiente'
+            ]);
+            return;
+        }
+
+        // 3. Verificar tarjeta de crédito
+        // Primero intentar con la tarjeta proporcionada en el pedido
+        $tarjeta_para_pago = null;
+        if (!empty($input['tarjeta'])) {
+            // Validar formato básico
+            $tarjeta_limpia = preg_replace('/[\s\-]/', '', $input['tarjeta']);
+            if (!preg_match('/^\d{13,19}$/', $tarjeta_limpia)) {
+                $pdo->rollBack();
+                http_response_code(400);
+                echo json_encode(['success' => false, 'mensaje' => 'Número de tarjeta de crédito inválido']);
+                return;
+            }
+            $tarjeta_para_pago = $tarjeta_limpia;
+
+            // Guardar/actualizar tarjeta cifrada en el perfil del usuario
+            $tarjeta_cifrada = encriptarTarjeta($tarjeta_limpia);
+            $stmt = $pdo->prepare('UPDATE usuarios SET tarjeta_credito = ? WHERE id = ?');
+            $stmt->execute([$tarjeta_cifrada, $usuario['id']]);
+        } else {
+            // Usar tarjeta guardada en el perfil
+            $stmt = $pdo->prepare('SELECT tarjeta_credito FROM usuarios WHERE id = ?');
+            $stmt->execute([$usuario['id']]);
+            $user_data = $stmt->fetch();
+
+            if (empty($user_data['tarjeta_credito'])) {
+                $pdo->rollBack();
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'mensaje' => 'Se requiere una tarjeta de crédito para finalizar la compra. Proporciona una tarjeta o añádela en tu perfil.'
+                ]);
+                return;
+            }
+            $tarjeta_para_pago = descifrarTarjetaCompleta($user_data['tarjeta_credito']);
+        }
+
+        // 4. Crear el pedido
+        $numero_pedido = 'PED-' . date('YmdHis') . '-' . $usuario['id'];
+        $fecha_entrega = date('Y-m-d', strtotime('+7 days'));
+        $direccion_envio = $input['direccion_envio'] ?? null;
+
+        // Si no se proporcionó dirección de envío, usar la del perfil
+        if (empty($direccion_envio)) {
+            $stmt = $pdo->prepare('SELECT direccion FROM usuarios WHERE id = ?');
+            $stmt->execute([$usuario['id']]);
+            $perfil = $stmt->fetch();
+            $direccion_envio = $perfil['direccion'];
+        }
+
         $stmt = $pdo->prepare('
-            INSERT INTO pedidos (id_usuario, numero_pedido, total, estado)
-            VALUES (?, ?, ?, ?)
+            INSERT INTO pedidos (id_usuario, numero_pedido, total, estado, direccion_envio, fecha_entrega_estimada)
+            VALUES (?, ?, ?, ?, ?, ?)
         ');
-        $stmt->execute([$input['id_usuario'], $numero_pedido, $total, 'confirmado']);
+        $stmt->execute([$usuario['id'], $numero_pedido, $total, 'confirmado', $direccion_envio, $fecha_entrega]);
         $id_pedido = $pdo->lastInsertId();
 
-        // Crear detalles del pedido y actualizar stock
+        // 5. Crear detalles del pedido y actualizar stock
+        $detalles_email = [];
         foreach ($carrito as $item) {
-            // Insertar detalle
+            $subtotal = $item['cantidad'] * $item['precio_unitario'];
+
             $stmt = $pdo->prepare('
                 INSERT INTO detalle_pedido (id_pedido, id_articulo, cantidad, precio_unitario, subtotal)
                 VALUES (?, ?, ?, ?, ?)
             ');
-            $stmt->execute([
-                $id_pedido,
-                $item['id_articulo'],
-                $item['cantidad'],
-                $item['precio_unitario'],
-                $item['cantidad'] * $item['precio_unitario']
-            ]);
+            $stmt->execute([$id_pedido, $item['id_articulo'], $item['cantidad'], $item['precio_unitario'], $subtotal]);
 
             // Actualizar stock
-            $stmt = $pdo->prepare('UPDATE articulos SET stock = stock - ? WHERE id = ?');
-            $stmt->execute([$item['cantidad'], $item['id_articulo']]);
+            $stmt = $pdo->prepare('UPDATE articulos SET stock = stock - ? WHERE id = ? AND stock >= ?');
+            $stmt->execute([$item['cantidad'], $item['id_articulo'], $item['cantidad']]);
 
             // Registrar movimiento de stock
-            $stmt = $pdo->prepare('
-                SELECT stock FROM articulos WHERE id = ?
-            ');
+            $stmt = $pdo->prepare('SELECT stock FROM articulos WHERE id = ?');
             $stmt->execute([$item['id_articulo']]);
-            $nuevo_stock = $stmt->fetch()['stock'];
+            $nuevo_stock = $stmt->fetchColumn();
 
             $stmt = $pdo->prepare('
-                INSERT INTO movimiento_stock (id_articulo, cantidad_nueva, tipo_movimiento, motivo)
-                VALUES (?, ?, ?, ?)
+                INSERT INTO movimiento_stock (id_articulo, cantidad_anterior, cantidad_nueva, tipo_movimiento, motivo, usuario_responsable)
+                VALUES (?, ?, ?, ?, ?, ?)
             ');
             $stmt->execute([
                 $item['id_articulo'],
+                $item['stock'],
                 $nuevo_stock,
                 'salida',
-                'Venta - Pedido #' . $numero_pedido
+                'Venta - Pedido #' . $numero_pedido,
+                $usuario['id']
             ]);
+
+            $detalles_email[] = [
+                'nombre' => $item['nombre'],
+                'cantidad' => $item['cantidad'],
+                'precio' => $item['precio_unitario'],
+                'subtotal' => $subtotal
+            ];
         }
 
-        // Limpiar carrito
+        // 6. Limpiar carrito
         $stmt = $pdo->prepare('DELETE FROM carrito_sesion WHERE id_usuario = ?');
-        $stmt->execute([$input['id_usuario']]);
+        $stmt->execute([$usuario['id']]);
 
-        // Crear notificación
+        // 7. Crear notificación en BD
         $stmt = $pdo->prepare('
             INSERT INTO notificaciones (id_usuario, tipo, asunto, contenido)
             VALUES (?, ?, ?, ?)
         ');
-        $stmt->execute([
-            $input['id_usuario'],
-            'pedido',
-            'Pedido confirmado: ' . $numero_pedido,
-            'Tu pedido #' . $numero_pedido . ' ha sido confirmado por $' . $total
-        ]);
+        $contenido_notif = 'Pedido #' . $numero_pedido . ' confirmado. Total: ' . number_format($total, 2) . '€. Entrega estimada: ' . $fecha_entrega;
+        $stmt->execute([$usuario['id'], 'pedido', 'Pedido confirmado: ' . $numero_pedido, $contenido_notif]);
 
-        // Confirmar transacción
         $pdo->commit();
 
-        registrarLog('PEDIDO_CREADO', $input['id_usuario'], 'Pedido #' . $numero_pedido . ' creado por $' . $total);
+        // 8. Enviar email de confirmación
+        $tarjeta_enmascarada = '**** **** **** ' . substr($tarjeta_para_pago, -4);
+        $email_enviado = enviarEmailConfirmacion(
+            $usuario['email'],
+            $usuario['nombre'],
+            $numero_pedido,
+            $detalles_email,
+            $total,
+            $fecha_entrega,
+            $direccion_envio,
+            $tarjeta_enmascarada
+        );
+
+        registrarLog('PEDIDO_CREADO', $usuario['id'], 'Pedido #' . $numero_pedido . ' por ' . number_format($total, 2) . '€');
 
         echo json_encode([
             'success' => true,
-            'mensaje' => 'Pedido creado exitosamente',
+            'mensaje' => 'Pedido creado exitosamente. Se ha enviado un correo de confirmación.',
             'datos' => [
                 'id_pedido' => $id_pedido,
                 'numero_pedido' => $numero_pedido,
-                'total' => $total,
-                'estado' => 'confirmado'
+                'total' => round($total, 2),
+                'estado' => 'confirmado',
+                'fecha_entrega_estimada' => $fecha_entrega,
+                'email_enviado' => $email_enviado,
+                'tarjeta_usada' => $tarjeta_enmascarada
             ]
         ]);
     } catch (Exception $e) {
         $pdo->rollBack();
         http_response_code(500);
-        echo json_encode([
-            'success' => false,
-            'mensaje' => 'Error al crear pedido',
-            'debug' => $e->getMessage()
-        ]);
+        echo json_encode(['success' => false, 'mensaje' => 'Error al crear pedido']);
     }
+}
+
+/**
+ * Enviar correo electrónico de confirmación de compra
+ */
+function enviarEmailConfirmacion($email, $nombre, $numero_pedido, $detalles, $total, $fecha_entrega, $direccion, $tarjeta_enmascarada) {
+    $asunto = 'Athlos Forge - Confirmación de Pedido #' . $numero_pedido;
+
+    // Construir tabla de productos
+    $tabla_items = '';
+    foreach ($detalles as $d) {
+        $tabla_items .= '<tr>
+            <td style="padding:8px;border-bottom:1px solid #ddd;">' . htmlspecialchars($d['nombre']) . '</td>
+            <td style="padding:8px;border-bottom:1px solid #ddd;text-align:center;">' . $d['cantidad'] . '</td>
+            <td style="padding:8px;border-bottom:1px solid #ddd;text-align:right;">' . number_format($d['precio'], 2) . '€</td>
+            <td style="padding:8px;border-bottom:1px solid #ddd;text-align:right;">' . number_format($d['subtotal'], 2) . '€</td>
+        </tr>';
+    }
+
+    $cuerpo = '
+    <html>
+    <head><meta charset="UTF-8"></head>
+    <body style="font-family:Arial,sans-serif;background:#1a1a1a;color:#fff;padding:20px;">
+        <div style="max-width:600px;margin:0 auto;background:#2d2d2d;border-radius:10px;overflow:hidden;">
+            <div style="background:linear-gradient(135deg,#D4AF37,#B8860B);padding:20px;text-align:center;">
+                <h1 style="margin:0;color:#1a1a1a;">ATHLOS FORGE</h1>
+                <p style="margin:5px 0 0;color:#1a1a1a;">Confirmación de Pedido</p>
+            </div>
+            <div style="padding:20px;">
+                <p>Hola <strong>' . htmlspecialchars($nombre) . '</strong>,</p>
+                <p>Tu pedido ha sido confirmado correctamente. Aquí tienes los detalles:</p>
+
+                <div style="background:#3a3a3a;padding:15px;border-radius:5px;margin:15px 0;">
+                    <p><strong>Nº Pedido:</strong> ' . $numero_pedido . '</p>
+                    <p><strong>Fecha:</strong> ' . date('d/m/Y H:i') . '</p>
+                    <p><strong>Tarjeta:</strong> ' . $tarjeta_enmascarada . '</p>
+                </div>
+
+                <table style="width:100%;border-collapse:collapse;margin:15px 0;">
+                    <thead>
+                        <tr style="background:#D4AF37;color:#1a1a1a;">
+                            <th style="padding:10px;text-align:left;">Producto</th>
+                            <th style="padding:10px;text-align:center;">Cant.</th>
+                            <th style="padding:10px;text-align:right;">Precio</th>
+                            <th style="padding:10px;text-align:right;">Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody>' . $tabla_items . '</tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="3" style="padding:10px;text-align:right;font-weight:bold;color:#D4AF37;">TOTAL:</td>
+                            <td style="padding:10px;text-align:right;font-weight:bold;color:#D4AF37;">' . number_format($total, 2) . '€</td>
+                        </tr>
+                    </tfoot>
+                </table>
+
+                <div style="background:#3a3a3a;padding:15px;border-radius:5px;margin:15px 0;">
+                    <p style="color:#D4AF37;font-weight:bold;">📦 Información de Envío</p>
+                    <p><strong>Dirección:</strong> ' . htmlspecialchars($direccion) . '</p>
+                    <p><strong>Fecha de entrega estimada:</strong> <span style="color:#D4AF37;font-size:1.1em;">' . date('d/m/Y', strtotime($fecha_entrega)) . '</span></p>
+                </div>
+
+                <p style="text-align:center;margin-top:20px;color:#aaa;font-size:0.9em;">
+                    Gracias por confiar en Athlos Forge. ¡Nos vemos en la forja!
+                </p>
+            </div>
+        </div>
+    </body>
+    </html>';
+
+    $headers  = "MIME-Version: 1.0\r\n";
+    $headers .= "Content-Type: text/html; charset=UTF-8\r\n";
+    $headers .= "From: Athlos Forge <noreply@athlosforge.com>\r\n";
+
+    return @mail($email, $asunto, $cuerpo, $headers);
 }
 
 function obtenerPedidos() {
     global $pdo;
-
-    $id_usuario = isset($_GET['id_usuario']) ? $_GET['id_usuario'] : null;
-
-    if (!$id_usuario) {
-        http_response_code(400);
-        echo json_encode([
-            'success' => false,
-            'mensaje' => 'ID de usuario requerido'
-        ]);
-        return;
-    }
+    $usuario = requiereAutenticacion();
 
     try {
         $stmt = $pdo->prepare('
-            SELECT id, numero_pedido, fecha_pedido, estado, total, fecha_entrega_estimada
+            SELECT id, numero_pedido, fecha_pedido, estado, total, fecha_entrega_estimada, direccion_envio
             FROM pedidos
             WHERE id_usuario = ?
             ORDER BY fecha_pedido DESC
         ');
-        $stmt->execute([$id_usuario]);
-        $pedidos = $stmt->fetchAll();
-
-        echo json_encode([
-            'success' => true,
-            'datos' => $pedidos
-        ]);
+        $stmt->execute([$usuario['id']]);
+        echo json_encode(['success' => true, 'datos' => $stmt->fetchAll()]);
     } catch (Exception $e) {
         http_response_code(500);
-        echo json_encode([
-            'success' => false,
-            'mensaje' => 'Error al obtener pedidos'
-        ]);
+        echo json_encode(['success' => false, 'mensaje' => 'Error al obtener pedidos']);
     }
 }
 
 function obtenerPedidoById() {
     global $pdo;
-
-    $id = isset($_GET['id']) ? $_GET['id'] : null;
+    $usuario = requiereAutenticacion();
+    $id = isset($_GET['id']) ? (int)$_GET['id'] : null;
 
     if (!$id) {
         http_response_code(400);
-        echo json_encode([
-            'success' => false,
-            'mensaje' => 'ID de pedido requerido'
-        ]);
+        echo json_encode(['success' => false, 'mensaje' => 'ID de pedido requerido']);
         return;
     }
 
     try {
-        $stmt = $pdo->prepare('
-            SELECT * FROM pedidos WHERE id = ?
-        ');
-        $stmt->execute([$id]);
+        // El usuario solo puede ver sus propios pedidos (admin puede ver todos)
+        $query = 'SELECT * FROM pedidos WHERE id = ?';
+        $params = [$id];
+        if ($usuario['rol'] !== 'administrador') {
+            $query .= ' AND id_usuario = ?';
+            $params[] = $usuario['id'];
+        }
+
+        $stmt = $pdo->prepare($query);
+        $stmt->execute($params);
         $pedido = $stmt->fetch();
 
         if (!$pedido) {
             http_response_code(404);
-            echo json_encode([
-                'success' => false,
-                'mensaje' => 'Pedido no encontrado'
-            ]);
+            echo json_encode(['success' => false, 'mensaje' => 'Pedido no encontrado']);
             return;
         }
 
-        // Obtener detalles
+        // Detalles
         $stmt = $pdo->prepare('
-            SELECT dp.*, a.nombre 
+            SELECT dp.*, a.nombre, a.imagen_url
             FROM detalle_pedido dp
             JOIN articulos a ON dp.id_articulo = a.id
             WHERE dp.id_pedido = ?
         ');
         $stmt->execute([$id]);
-        $detalles = $stmt->fetchAll();
+        $pedido['detalles'] = $stmt->fetchAll();
 
-        $pedido['detalles'] = $detalles;
-
-        echo json_encode([
-            'success' => true,
-            'datos' => $pedido
-        ]);
+        echo json_encode(['success' => true, 'datos' => $pedido]);
     } catch (Exception $e) {
         http_response_code(500);
-        echo json_encode([
-            'success' => false,
-            'mensaje' => 'Error al obtener pedido'
-        ]);
+        echo json_encode(['success' => false, 'mensaje' => 'Error al obtener pedido']);
     }
 }
 
-// ========================================
-// FUNCIONES DE USUARIO
-// ========================================
+// ====================================================
+// USUARIO / PERFIL
+// ====================================================
 
 function obtenerPerfil() {
     global $pdo;
-
-    $id = isset($_GET['id']) ? $_GET['id'] : null;
-
-    if (!$id) {
-        http_response_code(400);
-        echo json_encode([
-            'success' => false,
-            'mensaje' => 'ID de usuario requerido'
-        ]);
-        return;
-    }
+    $usuario = requiereAutenticacion();
 
     try {
         $stmt = $pdo->prepare('
             SELECT id, nombre, apellidos, email, rol, genero, fecha_nacimiento, 
-                   direccion, pais, telefono, notificaciones, revista_digital, estado, fecha_registro
-            FROM usuarios
-            WHERE id = ?
+                   direccion, pais, telefono, tarjeta_credito, notificaciones, estado, fecha_registro
+            FROM usuarios WHERE id = ?
         ');
-        $stmt->execute([$id]);
-        $usuario = $stmt->fetch();
+        $stmt->execute([$usuario['id']]);
+        $perfil = $stmt->fetch();
 
-        if (!$usuario) {
+        if (!$perfil) {
             http_response_code(404);
-            echo json_encode([
-                'success' => false,
-                'mensaje' => 'Usuario no encontrado'
-            ]);
+            echo json_encode(['success' => false, 'mensaje' => 'Usuario no encontrado']);
             return;
         }
 
-        echo json_encode([
-            'success' => true,
-            'datos' => $usuario
-        ]);
+        // Descifrar tarjeta para mostrar enmascarada
+        $perfil['tarjeta_credito'] = descifrarTarjeta($perfil['tarjeta_credito']);
+
+        echo json_encode(['success' => true, 'datos' => $perfil]);
     } catch (Exception $e) {
         http_response_code(500);
-        echo json_encode([
-            'success' => false,
-            'mensaje' => 'Error al obtener perfil'
-        ]);
+        echo json_encode(['success' => false, 'mensaje' => 'Error al obtener perfil']);
     }
 }
 
 function actualizarPerfil() {
     global $pdo;
-
+    $usuario = requiereAutenticacion();
     $input = json_decode(file_get_contents('php://input'), true);
-    $id = isset($_GET['id']) ? $_GET['id'] : null;
-
-    if (!$id) {
-        http_response_code(400);
-        echo json_encode([
-            'success' => false,
-            'mensaje' => 'ID de usuario requerido'
-        ]);
-        return;
-    }
 
     try {
         $campos = [];
         $valores = [];
 
-        // Campos permitidos para actualizar
         $permitidos = ['nombre', 'apellidos', 'telefono', 'direccion', 'pais', 'notificaciones'];
-
         foreach ($permitidos as $campo) {
             if (isset($input[$campo])) {
                 $campos[] = $campo . ' = ?';
@@ -847,60 +1040,49 @@ function actualizarPerfil() {
             }
         }
 
+        // Actualizar tarjeta si se proporciona (cifrar)
+        if (isset($input['tarjeta']) && !empty($input['tarjeta'])) {
+            $campos[] = 'tarjeta_credito = ?';
+            $valores[] = encriptarTarjeta($input['tarjeta']);
+        }
+
         if (empty($campos)) {
             http_response_code(400);
-            echo json_encode([
-                'success' => false,
-                'mensaje' => 'No hay campos para actualizar'
-            ]);
+            echo json_encode(['success' => false, 'mensaje' => 'No hay campos para actualizar']);
             return;
         }
 
-        $valores[] = $id;
+        $valores[] = $usuario['id'];
         $query = 'UPDATE usuarios SET ' . implode(', ', $campos) . ' WHERE id = ?';
+        $pdo->prepare($query)->execute($valores);
 
-        $stmt = $pdo->prepare($query);
-        $stmt->execute($valores);
-
-        registrarLog('PERFIL_ACTUALIZADO', $id, 'Usuario actualizó su perfil');
-
-        echo json_encode([
-            'success' => true,
-            'mensaje' => 'Perfil actualizado exitosamente'
-        ]);
+        registrarLog('PERFIL_ACTUALIZADO', $usuario['id'], 'Perfil actualizado');
+        echo json_encode(['success' => true, 'mensaje' => 'Perfil actualizado']);
     } catch (Exception $e) {
         http_response_code(500);
-        echo json_encode([
-            'success' => false,
-            'mensaje' => 'Error al actualizar perfil'
-        ]);
+        echo json_encode(['success' => false, 'mensaje' => 'Error al actualizar perfil']);
     }
 }
 
-// ========================================
-// FUNCIONES DE OPINIONES
-// ========================================
+// ====================================================
+// OPINIONES
+// ====================================================
 
 function crearOpinion() {
     global $pdo;
-
+    $usuario = requiereAutenticacion();
     $input = json_decode(file_get_contents('php://input'), true);
 
-    if (empty($input['id_usuario']) || empty($input['id_articulo']) || empty($input['calificacion'])) {
+    if (empty($input['id_articulo']) || empty($input['calificacion'])) {
         http_response_code(400);
-        echo json_encode([
-            'success' => false,
-            'mensaje' => 'Faltan campos requeridos'
-        ]);
+        echo json_encode(['success' => false, 'mensaje' => 'Artículo y calificación requeridos']);
         return;
     }
 
-    if ($input['calificacion'] < 1 || $input['calificacion'] > 5) {
+    $calificacion = (int)$input['calificacion'];
+    if ($calificacion < 1 || $calificacion > 5) {
         http_response_code(400);
-        echo json_encode([
-            'success' => false,
-            'mensaje' => 'La calificación debe estar entre 1 y 5'
-        ]);
+        echo json_encode(['success' => false, 'mensaje' => 'La calificación debe estar entre 1 y 5']);
         return;
     }
 
@@ -914,38 +1096,22 @@ function crearOpinion() {
                 estado = "pendiente",
                 fecha_resena = NOW()
         ');
+        $stmt->execute([$usuario['id'], (int)$input['id_articulo'], $calificacion, $input['comentario'] ?? null]);
 
-        $stmt->execute([
-            $input['id_usuario'],
-            $input['id_articulo'],
-            $input['calificacion'],
-            $input['comentario'] ?? null
-        ]);
-
-        echo json_encode([
-            'success' => true,
-            'mensaje' => 'Opinión registrada, pendiente de aprobación'
-        ]);
+        echo json_encode(['success' => true, 'mensaje' => 'Opinión registrada, pendiente de aprobación']);
     } catch (Exception $e) {
         http_response_code(500);
-        echo json_encode([
-            'success' => false,
-            'mensaje' => 'Error al crear opinión'
-        ]);
+        echo json_encode(['success' => false, 'mensaje' => 'Error al crear opinión']);
     }
 }
 
 function obtenerOpiniones() {
     global $pdo;
-
-    $id_articulo = isset($_GET['id_articulo']) ? $_GET['id_articulo'] : null;
+    $id_articulo = isset($_GET['id_articulo']) ? (int)$_GET['id_articulo'] : null;
 
     if (!$id_articulo) {
         http_response_code(400);
-        echo json_encode([
-            'success' => false,
-            'mensaje' => 'ID de artículo requerido'
-        ]);
+        echo json_encode(['success' => false, 'mensaje' => 'ID de artículo requerido']);
         return;
     }
 
@@ -958,126 +1124,256 @@ function obtenerOpiniones() {
             ORDER BY o.fecha_resena DESC
         ');
         $stmt->execute([$id_articulo]);
-        $opiniones = $stmt->fetchAll();
-
-        echo json_encode([
-            'success' => true,
-            'datos' => $opiniones
-        ]);
+        echo json_encode(['success' => true, 'datos' => $stmt->fetchAll()]);
     } catch (Exception $e) {
         http_response_code(500);
-        echo json_encode([
-            'success' => false,
-            'mensaje' => 'Error al obtener opiniones'
-        ]);
+        echo json_encode(['success' => false, 'mensaje' => 'Error al obtener opiniones']);
     }
 }
 
-// ========================================
-// FUNCIONES DE BÚSQUEDA
-// ========================================
+// ====================================================
+// ADMINISTRACIÓN (requiere rol administrador)
+// ====================================================
 
-function buscarArticulos() {
+function adminListarUsuarios() {
     global $pdo;
+    requiereAdmin();
 
-    $termino = isset($_GET['q']) ? $_GET['q'] : '';
+    try {
+        $stmt = $pdo->query('
+            SELECT id, nombre, apellidos, email, rol, genero, estado, 
+                   fecha_registro, fecha_ultima_sesion 
+            FROM usuarios 
+            ORDER BY fecha_registro DESC
+        ');
+        echo json_encode(['success' => true, 'datos' => $stmt->fetchAll()]);
+    } catch (Exception $e) {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'mensaje' => 'Error al listar usuarios']);
+    }
+}
 
-    if (strlen($termino) < 2) {
-        http_response_code(400);
-        echo json_encode([
-            'success' => false,
-            'mensaje' => 'El término de búsqueda debe tener al menos 2 caracteres'
+function adminCrearArticulo() {
+    global $pdo;
+    $admin = requiereAdmin();
+    $input = json_decode(file_get_contents('php://input'), true);
+
+    $requeridos = ['nombre', 'precio', 'stock', 'id_categoria'];
+    foreach ($requeridos as $campo) {
+        if (!isset($input[$campo])) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'mensaje' => "Campo '$campo' requerido"]);
+            return;
+        }
+    }
+
+    try {
+        $stmt = $pdo->prepare('
+            INSERT INTO articulos (nombre, descripcion, precio, stock, id_categoria, imagen_url, disponible)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        ');
+        $stmt->execute([
+            htmlspecialchars($input['nombre']),
+            $input['descripcion'] ?? null,
+            (float)$input['precio'],
+            (int)$input['stock'],
+            (int)$input['id_categoria'],
+            $input['imagen_url'] ?? null,
+            $input['disponible'] ?? true
         ]);
+
+        registrarLog('ARTICULO_CREADO', $admin['id'], 'Artículo creado: ' . $input['nombre']);
+        echo json_encode(['success' => true, 'mensaje' => 'Artículo creado', 'id' => $pdo->lastInsertId()]);
+    } catch (Exception $e) {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'mensaje' => 'Error al crear artículo']);
+    }
+}
+
+function adminEditarArticulo() {
+    global $pdo;
+    $admin = requiereAdmin();
+    $input = json_decode(file_get_contents('php://input'), true);
+
+    if (empty($input['id'])) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'mensaje' => 'ID de artículo requerido']);
         return;
     }
 
     try {
-        $busqueda = '%' . $termino . '%';
-        
-        $stmt = $pdo->prepare('
-            SELECT 
-                a.id, 
-                a.nombre, 
-                a.descripcion, 
-                a.precio, 
-                a.stock, 
-                a.id_categoria, 
-                a.imagen_url,
-                a.disponible,
-                c.nombre as categoria_nombre
-            FROM articulos a
-            LEFT JOIN categorias c ON a.id_categoria = c.id
-            WHERE a.disponible = TRUE AND (
-                a.nombre LIKE ? OR 
-                a.descripcion LIKE ?
-            )
-            ORDER BY a.nombre ASC
-        ');
+        $campos = [];
+        $valores = [];
+        $permitidos = ['nombre', 'descripcion', 'precio', 'stock', 'id_categoria', 'imagen_url', 'disponible'];
 
-        $stmt->execute([$busqueda, $busqueda]);
-        $resultados = $stmt->fetchAll();
+        foreach ($permitidos as $campo) {
+            if (isset($input[$campo])) {
+                $campos[] = "$campo = ?";
+                $valores[] = $input[$campo];
+            }
+        }
 
-        echo json_encode([
-            'success' => true,
-            'total' => count($resultados),
-            'termino' => $termino,
-            'datos' => $resultados
-        ]);
+        if (empty($campos)) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'mensaje' => 'No hay campos para actualizar']);
+            return;
+        }
+
+        $valores[] = (int)$input['id'];
+        $pdo->prepare('UPDATE articulos SET ' . implode(', ', $campos) . ' WHERE id = ?')->execute($valores);
+
+        registrarLog('ARTICULO_EDITADO', $admin['id'], 'Artículo editado ID: ' . $input['id']);
+        echo json_encode(['success' => true, 'mensaje' => 'Artículo actualizado']);
     } catch (Exception $e) {
         http_response_code(500);
-        echo json_encode([
-            'success' => false,
-            'mensaje' => 'Error al realizar la búsqueda',
-            'debug' => $e->getMessage()
-        ]);
+        echo json_encode(['success' => false, 'mensaje' => 'Error al editar artículo']);
     }
 }
 
-// ========================================
-// FUNCIONES AUXILIARES
-// ========================================
-
-function registrarLog($tipo, $id_usuario, $descripcion) {
+function adminEliminarArticulo() {
     global $pdo;
+    $admin = requiereAdmin();
+    $input = json_decode(file_get_contents('php://input'), true);
+
+    if (empty($input['id'])) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'mensaje' => 'ID de artículo requerido']);
+        return;
+    }
 
     try {
-        $stmt = $pdo->prepare('
-            INSERT INTO logs_sistema (tipo_accion, id_usuario, descripcion, ip_address, user_agent)
-            VALUES (?, ?, ?, ?, ?)
-        ');
+        // Soft delete: marcar como no disponible
+        $stmt = $pdo->prepare('UPDATE articulos SET disponible = FALSE WHERE id = ?');
+        $stmt->execute([(int)$input['id']]);
 
+        registrarLog('ARTICULO_ELIMINADO', $admin['id'], 'Artículo desactivado ID: ' . $input['id']);
+        echo json_encode(['success' => true, 'mensaje' => 'Artículo desactivado']);
+    } catch (Exception $e) {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'mensaje' => 'Error al eliminar artículo']);
+    }
+}
+
+function adminActualizarStock() {
+    global $pdo;
+    $admin = requiereAdmin();
+    $input = json_decode(file_get_contents('php://input'), true);
+
+    if (empty($input['id_articulo']) || !isset($input['cantidad'])) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'mensaje' => 'ID de artículo y cantidad requeridos']);
+        return;
+    }
+
+    try {
+        $stmt = $pdo->prepare('SELECT stock, nombre FROM articulos WHERE id = ?');
+        $stmt->execute([(int)$input['id_articulo']]);
+        $articulo = $stmt->fetch();
+
+        if (!$articulo) {
+            http_response_code(404);
+            echo json_encode(['success' => false, 'mensaje' => 'Artículo no encontrado']);
+            return;
+        }
+
+        $nuevo_stock = (int)$input['cantidad'];
+        $stmt = $pdo->prepare('UPDATE articulos SET stock = ? WHERE id = ?');
+        $stmt->execute([$nuevo_stock, (int)$input['id_articulo']]);
+
+        // Registrar movimiento
+        $tipo = $nuevo_stock > $articulo['stock'] ? 'entrada' : ($nuevo_stock < $articulo['stock'] ? 'salida' : 'ajuste');
+        $stmt = $pdo->prepare('
+            INSERT INTO movimiento_stock (id_articulo, cantidad_anterior, cantidad_nueva, tipo_movimiento, motivo, usuario_responsable)
+            VALUES (?, ?, ?, ?, ?, ?)
+        ');
         $stmt->execute([
+            (int)$input['id_articulo'],
+            $articulo['stock'],
+            $nuevo_stock,
             $tipo,
-            $id_usuario,
-            $descripcion,
-            $_SERVER['REMOTE_ADDR'],
-            $_SERVER['HTTP_USER_AGENT'] ?? 'N/A'
+            $input['motivo'] ?? 'Ajuste manual de stock',
+            $admin['id']
         ]);
+
+        registrarLog('STOCK_ACTUALIZADO', $admin['id'], $articulo['nombre'] . ': ' . $articulo['stock'] . ' → ' . $nuevo_stock);
+        echo json_encode(['success' => true, 'mensaje' => 'Stock actualizado: ' . $articulo['stock'] . ' → ' . $nuevo_stock]);
     } catch (Exception $e) {
-        // Silenciar errores en logs
+        http_response_code(500);
+        echo json_encode(['success' => false, 'mensaje' => 'Error al actualizar stock']);
     }
 }
 
-function crearSuscripcionRevista($id_usuario) {
+function adminListarPedidos() {
     global $pdo;
+    requiereAdmin();
 
     try {
-        $mes = date('m');
-        $anno = date('Y');
-
-        $stmt = $pdo->prepare('
-            INSERT INTO revista_digital (id_usuario, numero, mes, anno, fecha_envio, abierta)
-            VALUES (?, ?, ?, ?, DATE_ADD(CURDATE(), INTERVAL 1 MONTH), 0)
+        $stmt = $pdo->query('
+            SELECT p.*, u.nombre, u.apellidos, u.email 
+            FROM pedidos p
+            JOIN usuarios u ON p.id_usuario = u.id
+            ORDER BY p.fecha_pedido DESC
         ');
-
-        $stmt->execute([
-            $id_usuario,
-            1,
-            $mes,
-            $anno
-        ]);
+        echo json_encode(['success' => true, 'datos' => $stmt->fetchAll()]);
     } catch (Exception $e) {
-        // Silenciar errores
+        http_response_code(500);
+        echo json_encode(['success' => false, 'mensaje' => 'Error al listar pedidos']);
+    }
+}
+
+function adminCambiarEstadoPedido() {
+    global $pdo;
+    $admin = requiereAdmin();
+    $input = json_decode(file_get_contents('php://input'), true);
+
+    if (empty($input['id_pedido']) || empty($input['estado'])) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'mensaje' => 'ID de pedido y estado requeridos']);
+        return;
+    }
+
+    $estados_validos = ['pendiente', 'confirmado', 'enviado', 'entregado', 'cancelado'];
+    if (!in_array($input['estado'], $estados_validos)) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'mensaje' => 'Estado no válido. Opciones: ' . implode(', ', $estados_validos)]);
+        return;
+    }
+
+    try {
+        $stmt = $pdo->prepare('UPDATE pedidos SET estado = ? WHERE id = ?');
+        $stmt->execute([$input['estado'], (int)$input['id_pedido']]);
+
+        if ($stmt->rowCount() === 0) {
+            http_response_code(404);
+            echo json_encode(['success' => false, 'mensaje' => 'Pedido no encontrado']);
+            return;
+        }
+
+        // Si se cancela, restaurar stock
+        if ($input['estado'] === 'cancelado') {
+            $stmt = $pdo->prepare('
+                SELECT id_articulo, cantidad FROM detalle_pedido WHERE id_pedido = ?
+            ');
+            $stmt->execute([(int)$input['id_pedido']]);
+            $detalles = $stmt->fetchAll();
+
+            foreach ($detalles as $d) {
+                $pdo->prepare('UPDATE articulos SET stock = stock + ? WHERE id = ?')
+                    ->execute([$d['cantidad'], $d['id_articulo']]);
+            }
+        }
+
+        // Si se entrega, registrar fecha real
+        if ($input['estado'] === 'entregado') {
+            $pdo->prepare('UPDATE pedidos SET fecha_entrega_real = NOW() WHERE id = ?')
+                ->execute([(int)$input['id_pedido']]);
+        }
+
+        registrarLog('PEDIDO_ESTADO', $admin['id'], 'Pedido #' . $input['id_pedido'] . ' → ' . $input['estado']);
+        echo json_encode(['success' => true, 'mensaje' => 'Estado del pedido actualizado a: ' . $input['estado']]);
+    } catch (Exception $e) {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'mensaje' => 'Error al cambiar estado del pedido']);
     }
 }
 
