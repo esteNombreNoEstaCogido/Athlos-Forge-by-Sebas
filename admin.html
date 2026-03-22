@@ -214,6 +214,56 @@
         </div>
     </div>
 
+    <!-- FOOTER -->
+    <footer class="site-footer">
+        <div class="container">
+            <div class="row gy-4">
+                <div class="col-lg-3 col-md-6">
+                    <h6 class="footer-heading">Mapa del sitio</h6>
+                    <ul class="footer-links">
+                        <li><a href="index.html">Inicio</a></li>
+                        <li><a href="entrenamientos.html">Entrenamientos</a></li>
+                        <li><a href="blog.html">Blog</a></li>
+                        <li><a href="opiniones.html">Opiniones</a></li>
+                        <li><a href="login.html">Acceder</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <h6 class="footer-heading">Entrenamientos</h6>
+                    <ul class="footer-links">
+                        <li><a href="entrenamientos.html">Funcional</a></li>
+                        <li><a href="entrenamientos.html">Boxeo &amp; Kickboxing</a></li>
+                        <li><a href="entrenamientos.html">Pilates &amp; Movilidad</a></li>
+                        <li><a href="entrenamientos.html">Fuerza</a></li>
+                        <li><a href="entrenamientos.html">GAP</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <h6 class="footer-heading">Contacto</h6>
+                    <ul class="footer-links footer-contact">
+                        <li><i class="bi bi-envelope"></i> info@athlosforge.com</li>
+                        <li><i class="bi bi-geo-alt"></i> Madrid, España</li>
+                        <li><i class="bi bi-clock"></i> Lun - Vie: 7:00 – 22:00</li>
+                    </ul>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <h6 class="footer-heading">Síguenos</h6>
+                    <div class="footer-social">
+                        <a href="#" aria-label="Instagram"><i class="bi bi-instagram"></i></a>
+                        <a href="#" aria-label="YouTube"><i class="bi bi-youtube"></i></a>
+                        <a href="#" aria-label="TikTok"><i class="bi bi-tiktok"></i></a>
+                        <a href="#" aria-label="Twitter"><i class="bi bi-twitter-x"></i></a>
+                    </div>
+                    <p class="footer-tagline mt-3">Forja de Campeones</p>
+                    <p class="footer-desc">La verdadera fuerza no se mide en kilos... se mide en años de salud.</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 Athlos Forge by Sebas. Todos los derechos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
     <!-- MODAL: Editar/Crear Producto -->
     <div class="modal fade modal-admin" id="modalProducto" tabindex="-1">
         <div class="modal-dialog">
@@ -258,6 +308,37 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                     <button type="button" class="btn btn-gold-sm px-4 py-2" onclick="guardarProducto()">Guardar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Resetear Contraseña -->
+    <div class="modal fade modal-admin" id="modalResetPassword" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title text-gold-flat" id="modalResetPasswordTitulo">Resetear Contraseña</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formResetPassword">
+                        <input type="hidden" id="resetUserId">
+                        <p class="text-secondary mb-3">Usuario: <strong class="text-white" id="resetUserName"></strong></p>
+                        <div class="mb-3">
+                            <label class="form-label small text-uppercase">Nueva Contraseña</label>
+                            <input type="password" class="form-control" id="resetNewPassword" required minlength="8">
+                            <small class="text-muted">Mínimo 8 caracteres, una mayúscula, una minúscula y un número</small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small text-uppercase">Confirmar Contraseña</label>
+                            <input type="password" class="form-control" id="resetConfirmPassword" required minlength="8">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-gold-sm px-4 py-2" onclick="confirmarResetPassword()">Cambiar Contraseña</button>
                 </div>
             </div>
         </div>

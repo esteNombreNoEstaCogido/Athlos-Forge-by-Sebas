@@ -465,12 +465,15 @@ async function cargarUsuarios() {
         const data = await res.json();
         usuariosCache = data.success ? data.datos : [];
 
+        // Obtener ID del admin actual para no mostrar botón de eliminar en su propia fila
+        const adminActual = JSON.parse(localStorage.getItem('usuario') || '{}');
+
         document.getElementById('adminContent').innerHTML = `
             <h4 class="text-gold-flat mb-4"><i class="bi bi-people"></i> Usuarios (${usuariosCache.length})</h4>
             <div class="admin-table">
                 <table class="table table-dark table-hover">
                     <thead><tr>
-                        <th>ID</th><th>Nombre</th><th>Email</th><th>Rol</th><th>Estado</th><th>Registro</th><th>Última Sesión</th>
+                        <th>ID</th><th>Nombre</th><th>Email</th><th>Rol</th><th>Estado</th><th>Registro</th><th>Última Sesión</th><th>Acciones</th>
                     </tr></thead>
                     <tbody>
                         ${usuariosCache.map(u => `
@@ -482,6 +485,12 @@ async function cargarUsuarios() {
                             <td><span class="badge-estado badge-${u.estado}">${u.estado}</span></td>
                             <td>${formatearFecha(u.fecha_registro)}</td>
                             <td>${u.fecha_ultima_sesion ? formatearFecha(u.fecha_ultima_sesion) : 'Nunca'}</td>
+                            <td>
+                                <button class="btn btn-gold-sm me-1" onclick="abrirModalResetPassword(${u.id}, '${(u.nombre + ' ' + (u.apellidos || '')).trim().replace(/'/g, "\\'")}')"
+                                    title="Resetear contraseña"><i class="bi bi-key"></i></button>
+                                ${u.id != adminActual.id ? `<button class="btn btn-sm btn-outline-danger" onclick="eliminarUsuario(${u.id}, '${(u.nombre + ' ' + (u.apellidos || '')).trim().replace(/'/g, "\\'")}')"
+                                    title="Eliminar usuario"><i class="bi bi-trash"></i></button>` : ''}
+                            </td>
                         </tr>`).join('')}
                     </tbody>
                 </table>
@@ -489,6 +498,77 @@ async function cargarUsuarios() {
         `;
     } catch (e) {
         document.getElementById('adminContent').innerHTML = '<p class="text-danger">Error al cargar usuarios</p>';
+    }
+}
+
+// ============ GESTIÓN DE USUARIOS ============
+
+function abrirModalResetPassword(id, nombre) {
+    document.getElementById('resetUserId').value = id;
+    document.getElementById('resetUserName').textContent = nombre;
+    document.getElementById('resetNewPassword').value = '';
+    document.getElementById('resetConfirmPassword').value = '';
+    new bootstrap.Modal(document.getElementById('modalResetPassword')).show();
+}
+
+async function confirmarResetPassword() {
+    const id = parseInt(document.getElementById('resetUserId').value);
+    const nueva = document.getElementById('resetNewPassword').value;
+    const confirmar = document.getElementById('resetConfirmPassword').value;
+
+    if (!nueva || nueva.length < 8) {
+        alert('La contraseña debe tener al menos 8 caracteres');
+        return;
+    }
+    if (nueva !== confirmar) {
+        alert('Las contraseñas no coinciden');
+        return;
+    }
+    if (!/[a-z]/.test(nueva) || !/[A-Z]/.test(nueva) || !/[0-9]/.test(nueva)) {
+        alert('La contraseña debe contener al menos una mayúscula, una minúscula y un número');
+        return;
+    }
+
+    try {
+        const res = await fetch(`${API_URL}?action=admin_reset_password`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ id, nueva_password: nueva })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+            bootstrap.Modal.getInstance(document.getElementById('modalResetPassword')).hide();
+            alert(data.mensaje);
+        } else {
+            alert(data.mensaje || 'Error al resetear contraseña');
+        }
+    } catch (e) {
+        alert('Error de conexión');
+    }
+}
+
+async function eliminarUsuario(id, nombre) {
+    if (!confirm(`¿Estás seguro de eliminar al usuario "${nombre}"?\n\nEsta acción eliminará también todos sus pedidos, carrito y sesiones.`)) return;
+
+    try {
+        const res = await fetch(`${API_URL}?action=admin_eliminar_usuario`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ id })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+            alert(data.mensaje);
+            cargarUsuarios();
+        } else {
+            alert(data.mensaje || 'Error al eliminar usuario');
+        }
+    } catch (e) {
+        alert('Error de conexión');
     }
 }
 

@@ -706,3 +706,125 @@ h3 {
         font-size: 0.9rem;
     }
 }
+
+/* ============ FOOTER ============ */
+.site-footer {
+    background: linear-gradient(180deg, rgba(10, 10, 10, 1) 0%, rgba(0, 0, 0, 1) 100%);
+    border-top: 1px solid rgba(212, 175, 55, 0.3);
+    padding: 60px 0 0;
+    margin-top: 80px;
+    position: relative;
+    z-index: 10;
+}
+
+.footer-tagline {
+    font-family: 'Cinzel', serif;
+    color: var(--gold-color);
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.footer-desc {
+    color: #999;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    margin-bottom: 0;
+}
+
+.footer-social {
+    display: flex;
+    gap: 12px;
+}
+
+.footer-social a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    border: 1px solid rgba(212, 175, 55, 0.4);
+    color: var(--gold-color);
+    font-size: 1.1rem;
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+.footer-social a:hover {
+    background: var(--gold-color);
+    color: #000;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+}
+
+.footer-heading {
+    font-family: 'Cinzel', serif;
+    color: #fff;
+    font-size: 0.95rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--gold-color);
+    display: inline-block;
+}
+
+.footer-links {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.footer-links li {
+    margin-bottom: 10px;
+}
+
+.footer-links a {
+    color: #fff;
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: color 0.3s ease, padding-left 0.3s ease;
+}
+
+.footer-links a:hover {
+    color: var(--gold-color);
+    padding-left: 4px;
+}
+
+.footer-contact li {
+    color: #ccc;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.footer-contact i {
+    color: var(--gold-color);
+    font-size: 1rem;
+    min-width: 18px;
+}
+
+.footer-bottom {
+    margin-top: 40px;
+    padding: 20px 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    text-align: center;
+}
+
+.footer-bottom p {
+    color: #666;
+    font-size: 0.85rem;
+    margin: 0;
+}
+
+@media (max-width: 768px) {
+    .site-footer {
+        padding: 40px 0 0;
+    }
+
+    .footer-heading {
+        margin-top: 10px;
+    }
+}

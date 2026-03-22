@@ -41,6 +41,8 @@
  *
  * ── Admin (requiere sesión - administrador) ──
  * GET  ?action=admin_usuarios     Listar todos los usuarios
+ * POST ?action=admin_eliminar_usuario  Eliminar usuario
+ * POST ?action=admin_reset_password   Resetear contraseña de usuario
  * POST ?action=admin_crear_articulo   Crear artículo
  * POST ?action=admin_editar_articulo  Editar artículo
  * POST ?action=admin_eliminar_articulo Eliminar artículo
@@ -110,6 +112,8 @@ switch ($action) {
 
     // ── Admin ──
     case 'admin_usuarios':          adminListarUsuarios(); break;
+    case 'admin_eliminar_usuario':  adminEliminarUsuario(); break;
+    case 'admin_reset_password':    adminResetPassword(); break;
     case 'admin_crear_articulo':    adminCrearArticulo(); break;
     case 'admin_editar_articulo':   adminEditarArticulo(); break;
     case 'admin_eliminar_articulo': adminEliminarArticulo(); break;
@@ -1150,6 +1154,94 @@ function adminListarUsuarios() {
     } catch (Exception $e) {
         http_response_code(500);
         echo json_encode(['success' => false, 'mensaje' => 'Error al listar usuarios']);
+    }
+}
+
+function adminEliminarUsuario() {
+    global $pdo;
+    $admin = requiereAdmin();
+    $input = json_decode(file_get_contents('php://input'), true);
+
+    if (empty($input['id'])) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'mensaje' => 'ID de usuario requerido']);
+        return;
+    }
+
+    $id = (int)$input['id'];
+
+    // No permitir que el admin se elimine a sí mismo
+    if ($id === (int)$admin['id']) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'mensaje' => 'No puedes eliminar tu propia cuenta']);
+        return;
+    }
+
+    try {
+        // Verificar que el usuario existe
+        $stmt = $pdo->prepare('SELECT id, nombre, email, rol FROM usuarios WHERE id = ?');
+        $stmt->execute([$id]);
+        $usuario = $stmt->fetch();
+
+        if (!$usuario) {
+            http_response_code(404);
+            echo json_encode(['success' => false, 'mensaje' => 'Usuario no encontrado']);
+            return;
+        }
+
+        // Eliminar usuario (CASCADE borrará sesiones, carrito, etc.)
+        $stmt = $pdo->prepare('DELETE FROM usuarios WHERE id = ?');
+        $stmt->execute([$id]);
+
+        registrarLog('USUARIO_ELIMINADO', $admin['id'], 'Usuario eliminado: ' . $usuario['email'] . ' (ID: ' . $id . ')');
+        echo json_encode(['success' => true, 'mensaje' => 'Usuario "' . $usuario['nombre'] . '" eliminado correctamente']);
+    } catch (Exception $e) {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'mensaje' => 'Error al eliminar usuario']);
+    }
+}
+
+function adminResetPassword() {
+    global $pdo;
+    $admin = requiereAdmin();
+    $input = json_decode(file_get_contents('php://input'), true);
+
+    if (empty($input['id']) || empty($input['nueva_password'])) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'mensaje' => 'ID de usuario y nueva contraseña son requeridos']);
+        return;
+    }
+
+    $id = (int)$input['id'];
+    $nueva_password = $input['nueva_password'];
+
+    // Validar fortaleza de contraseña
+    if (strlen($nueva_password) < 8 || !preg_match('/[a-z]/', $nueva_password) || !preg_match('/[A-Z]/', $nueva_password) || !preg_match('/[0-9]/', $nueva_password)) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'mensaje' => 'La contraseña debe tener mínimo 8 caracteres, una mayúscula, una minúscula y un número']);
+        return;
+    }
+
+    try {
+        $stmt = $pdo->prepare('SELECT id, nombre, email FROM usuarios WHERE id = ?');
+        $stmt->execute([$id]);
+        $usuario = $stmt->fetch();
+
+        if (!$usuario) {
+            http_response_code(404);
+            echo json_encode(['success' => false, 'mensaje' => 'Usuario no encontrado']);
+            return;
+        }
+
+        $hash = hashPassword($nueva_password);
+        $stmt = $pdo->prepare('UPDATE usuarios SET password = ? WHERE id = ?');
+        $stmt->execute([$hash, $id]);
+
+        registrarLog('PASSWORD_RESET', $admin['id'], 'Contraseña reseteada para: ' . $usuario['email'] . ' (ID: ' . $id . ')');
+        echo json_encode(['success' => true, 'mensaje' => 'Contraseña de "' . $usuario['nombre'] . '" actualizada correctamente']);
+    } catch (Exception $e) {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'mensaje' => 'Error al resetear contraseña']);
     }
 }
 
