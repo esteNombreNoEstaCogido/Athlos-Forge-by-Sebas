@@ -8,6 +8,7 @@
 
 - **[Sitio en Vivo (GitHub Pages)](https://estenombrenoestacogido.github.io/Athlos-Forge-by-Sebas/)**
 - **[Video Presentación](https://drive.google.com/file/d/1AYuFi687lVxGGldQcwQL-Dt1tFj2RAvF/view?usp=sharing)**
+- **[Video Sprint 2](https://drive.google.com/file/d/1nhsY_kjFHeu8kMmzEDG5j563tqFk1KIX/view?usp=drive_link)**
 
 ---
 
