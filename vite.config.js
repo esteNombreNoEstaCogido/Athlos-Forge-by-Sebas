@@ -5,12 +5,13 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 3000,
+    strictPort: true,
     open: true,
     proxy: {
       '/api': {
-        target: 'http://localhost/Athlos%20Forge%20by%20Sebas/php',
+        target: 'http://localhost',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, '')
+        rewrite: (path) => path.replace(/^\/api/, '/Athlos%20Forge%20by%20Sebas/php')
       }
     }
   },

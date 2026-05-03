@@ -2,10 +2,56 @@
 // Carrito de compras integrado con la API REST y base de datos
 // Validaciones: stock, duplicados, totales, producto inexistente
 
-const API_URL = 'php/api.php';
+let API_URL = 'php/api.php';
+const API_CANDIDATES = [
+    '/api/api.php',
+    'http://localhost/Athlos%20Forge%20by%20Sebas/php/api.php',
+    'http://127.0.0.1/Athlos%20Forge%20by%20Sebas/php/api.php',
+    'php/api.php',
+    '/php/api.php',
+    '/Athlos%20Forge%20by%20Sebas/php/api.php'
+];
+let apiResuelta = false;
+
+function parseJSONSeguro(valor, fallback) {
+    if (!valor) return fallback;
+    try {
+        return JSON.parse(valor);
+    } catch (e) {
+        return fallback;
+    }
+}
+
+function storageGet(key) {
+    try {
+        return localStorage.getItem(key);
+    } catch (e) {
+        return null;
+    }
+}
+
+function storageSet(key, value) {
+    try {
+        localStorage.setItem(key, value);
+    } catch (e) {
+        // Si el storage no está disponible, continuamos sin persistencia local
+    }
+}
+
+function storageRemove(key) {
+    try {
+        localStorage.removeItem(key);
+    } catch (e) {
+        // No-op
+    }
+}
 
 // Estado local del carrito (respaldo + UI instantánea)
-let carrito = JSON.parse(localStorage.getItem('athlosCarrito')) || [];
+let carrito = parseJSONSeguro(storageGet('athlosCarrito'), []);
+if (!Array.isArray(carrito)) {
+    carrito = [];
+    storageRemove('athlosCarrito');
+}
 
 // Referencias al DOM
 const contadorCarrito = document.getElementById('cart-count');
@@ -15,12 +61,44 @@ const totalPrecio = document.getElementById('cart-total');
 // ============ COMPROBAR SESIÓN ============
 
 function getUsuarioLocal() {
-    const u = localStorage.getItem('usuario');
-    return u ? JSON.parse(u) : null;
+    const u = storageGet('usuario');
+    const usuario = parseJSONSeguro(u, null);
+    if (usuario === null && u) {
+        storageRemove('usuario');
+    }
+    return usuario;
 }
 
 function estaAutenticado() {
     return getUsuarioLocal() !== null;
+}
+
+async function resolverApiUrl() {
+    if (apiResuelta) return;
+    for (const candidata of API_CANDIDATES) {
+        try {
+            const res = await fetch(`${candidata}?action=sesion`, { credentials: 'include' });
+            if (!res.ok) continue;
+            const contentType = (res.headers.get('content-type') || '').toLowerCase();
+            if (!contentType.includes('application/json')) continue;
+            const data = await res.json();
+            if (data && data.success === true && typeof data.autenticado === 'boolean') {
+                API_URL = candidata;
+                apiResuelta = true;
+                return;
+            }
+        } catch (e) {
+            // Probar siguiente candidata
+        }
+    }
+}
+
+async function apiRequest(action, options = {}) {
+    await resolverApiUrl();
+    return fetch(`${API_URL}?action=${encodeURIComponent(action)}`, {
+        credentials: 'include',
+        ...options
+    });
 }
 
 // ============ AGREGAR AL CARRITO ============
@@ -29,10 +107,9 @@ window.agregarAlCarrito = async function(nombre, precio, idArticulo) {
     // Si el usuario está autenticado → agregar vía API (valida stock, duplicados en BD)
     if (estaAutenticado()) {
         try {
-            const response = await fetch(`${API_URL}?action=carrito_agregar`, {
+            const response = await apiRequest('carrito_agregar', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
                 body: JSON.stringify({ id_articulo: idArticulo, cantidad: 1 })
             });
             const data = await response.json();
@@ -79,10 +156,9 @@ function agregarLocal(nombre, precio, idArticulo) {
 window.eliminarDelCarrito = async function(id, idServidor) {
     if (estaAutenticado() && idServidor) {
         try {
-            const response = await fetch(`${API_URL}?action=carrito_eliminar`, {
+            const response = await apiRequest('carrito_eliminar', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
                 body: JSON.stringify({ id: idServidor })
             });
             const data = await response.json();
@@ -107,10 +183,9 @@ window.actualizarCantidad = async function(id, idServidor, nuevaCantidad) {
 
     if (estaAutenticado() && idServidor) {
         try {
-            const response = await fetch(`${API_URL}?action=carrito_actualizar`, {
+            const response = await apiRequest('carrito_actualizar', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
                 body: JSON.stringify({ id: idServidor, cantidad: nuevaCantidad })
             });
             const data = await response.json();
@@ -138,9 +213,7 @@ async function sincronizarCarritoDesdeAPI() {
     if (!estaAutenticado()) return;
 
     try {
-        const response = await fetch(`${API_URL}?action=carrito_obtener`, {
-            credentials: 'include'
-        });
+        const response = await apiRequest('carrito_obtener');
         const data = await response.json();
 
         if (data.success) {
@@ -183,8 +256,9 @@ window.finalizarCompra = async function() {
 
     // Obtener perfil para verificar tarjeta guardada
     let tarjetaMasked = null;
+    const payloadPedido = {};
     try {
-        const resPerfil = await fetch(`${API_URL}?action=perfil`, { credentials: 'include' });
+        const resPerfil = await apiRequest('perfil');
         const dataPerfil = await resPerfil.json();
         if (dataPerfil.success && dataPerfil.datos.tarjeta_credito) {
             tarjetaMasked = dataPerfil.datos.tarjeta_credito;
@@ -192,8 +266,10 @@ window.finalizarCompra = async function() {
     } catch (e) { /* continuar sin datos de tarjeta */ }
 
     if (!tarjetaMasked) {
-        mostrarNotificacion('No tienes una tarjeta de crédito registrada. Añade una en tu perfil o regístrate con tarjeta.', 'error');
-        return;
+        const tarjetaNueva = await solicitarTarjetaParaCompra();
+        if (!tarjetaNueva) return;
+        tarjetaMasked = tarjetaNueva.enmascarada;
+        payloadPedido.tarjeta = tarjetaNueva.numero;
     }
 
     // Mostrar confirmación con tarjeta guardada
@@ -201,11 +277,10 @@ window.finalizarCompra = async function() {
     if (!confirmado) return;
 
     try {
-        const response = await fetch(`${API_URL}?action=crear_pedido`, {
+        const response = await apiRequest('crear_pedido', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({})
+            body: JSON.stringify(payloadPedido)
         });
         const data = await response.json();
 
@@ -228,8 +303,68 @@ window.finalizarCompra = async function() {
 
 // ============ MODAL CONFIRMACIÓN DE COMPRA ============
 
+function solicitarTarjetaParaCompra() {
+    return new Promise((resolve) => {
+        const overlay = document.createElement('div');
+        overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.8);z-index:10000;display:flex;align-items:center;justify-content:center;';
+
+        const modal = document.createElement('div');
+        modal.style.cssText = 'background:#2d2d2d;border:1px solid #D4AF37;border-radius:10px;padding:24px;max-width:460px;width:92%;color:#fff;';
+        modal.innerHTML = `
+            <h4 style="color:#D4AF37;margin-bottom:12px;text-align:center;">Añade una tarjeta para continuar</h4>
+            <p style="font-size:0.9em;color:#ddd;margin-bottom:12px;">
+                No tienes una tarjeta registrada. Puedes introducirla ahora para finalizar la compra.
+            </p>
+            <input id="tarjetaCheckoutInput" type="text" placeholder="1234 5678 9012 3456"
+                   style="width:100%;padding:10px 12px;border-radius:6px;border:1px solid #555;background:#1a1a1a;color:#fff;margin-bottom:8px;">
+            <small id="tarjetaCheckoutError" style="display:none;color:#ff7b7b;">Introduce una tarjeta válida (13-19 dígitos).</small>
+            <div style="display:flex;gap:10px;margin-top:14px;">
+                <button id="btnCancelarTarjeta" style="flex:1;padding:10px;background:#555;color:#fff;border:none;border-radius:5px;cursor:pointer;">Cancelar</button>
+                <button id="btnGuardarTarjeta" style="flex:1;padding:10px;background:linear-gradient(135deg,#D4AF37,#B8860B);color:#1a1a1a;border:none;border-radius:5px;cursor:pointer;font-weight:bold;">Guardar y continuar</button>
+            </div>
+        `;
+
+        overlay.appendChild(modal);
+        document.body.appendChild(overlay);
+
+        const input = modal.querySelector('#tarjetaCheckoutInput');
+        const error = modal.querySelector('#tarjetaCheckoutError');
+        const limpiar = () => input.value.replace(/[\s-]/g, '');
+
+        modal.querySelector('#btnCancelarTarjeta').addEventListener('click', () => {
+            document.body.removeChild(overlay);
+            resolve(null);
+        });
+
+        modal.querySelector('#btnGuardarTarjeta').addEventListener('click', () => {
+            const numero = limpiar();
+            if (!/^\d{13,19}$/.test(numero)) {
+                error.style.display = 'block';
+                return;
+            }
+            const enmascarada = `**** **** **** ${numero.slice(-4)}`;
+            document.body.removeChild(overlay);
+            resolve({ numero, enmascarada });
+        });
+
+        input.addEventListener('input', () => {
+            error.style.display = 'none';
+        });
+
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                document.body.removeChild(overlay);
+                resolve(null);
+            }
+        });
+    });
+}
+
 function confirmarCompra(tarjetaMasked) {
-    const total = carrito.reduce((sum, item) => sum + (item.precio * item.cantidad), 0);
+    const total = carrito.reduce((sum, item) => {
+        const subtotal = Number(item.subtotal ?? (Number(item.precio || 0) * Number(item.cantidad || 1)));
+        return sum + subtotal;
+    }, 0);
     return new Promise((resolve) => {
         const overlay = document.createElement('div');
         overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.8);z-index:10000;display:flex;align-items:center;justify-content:center;';
@@ -350,7 +485,7 @@ function mostrarNotificacion(mensaje, tipo) {
 // ============ UI: GUARDAR Y RENDERIZAR ============
 
 function guardarYActualizar() {
-    localStorage.setItem('athlosCarrito', JSON.stringify(carrito));
+    storageSet('athlosCarrito', JSON.stringify(carrito));
     actualizarContador();
     renderizarItems();
     calcularTotal();
@@ -417,7 +552,8 @@ function renderizarItems() {
         // Precio
         const precioSpan = document.createElement('span');
         precioSpan.className = 'text-gold-flat small';
-        precioSpan.textContent = `${(item.subtotal || item.precio).toFixed(2)}€`;
+        const subtotalSeguro = Number(item.subtotal ?? (Number(item.precio || 0) * Number(item.cantidad || 1)));
+        precioSpan.textContent = `${subtotalSeguro.toFixed(2)}�`;
         infoDiv.appendChild(precioSpan);
 
         // Aviso de stock
@@ -444,8 +580,11 @@ function renderizarItems() {
 
 function calcularTotal() {
     if (!totalPrecio) return;
-    const total = carrito.reduce((sum, item) => sum + (item.subtotal || item.precio * (item.cantidad || 1)), 0);
-    totalPrecio.textContent = `${total.toFixed(2)}€`;
+    const total = carrito.reduce((sum, item) => {
+        const subtotal = Number(item.subtotal ?? (Number(item.precio || 0) * Number(item.cantidad || 1)));
+        return sum + subtotal;
+    }, 0);
+    totalPrecio.textContent = `${total.toFixed(2)}�`;
 }
 
 // ============ INICIALIZAR ============
@@ -458,3 +597,5 @@ document.addEventListener('DOMContentLoaded', async () => {
         guardarYActualizar();
     }
 });
+
+

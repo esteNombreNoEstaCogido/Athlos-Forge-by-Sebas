@@ -1,7 +1,16 @@
 // js/admin.js
 // Panel de administración - Athlos Forge
 
-const API_URL = 'php/api.php';
+let API_URL = 'php/api.php';
+const API_CANDIDATES = [
+    '/api/api.php',
+    'http://localhost/Athlos%20Forge%20by%20Sebas/php/api.php',
+    'http://127.0.0.1/Athlos%20Forge%20by%20Sebas/php/api.php',
+    'php/api.php',
+    '/php/api.php',
+    '/Athlos%20Forge%20by%20Sebas/php/api.php'
+];
+let apiResuelta = false;
 let productosCache = [];
 let categoriasCache = [];
 let pedidosCache = [];
@@ -10,6 +19,7 @@ let usuariosCache = [];
 // ============ INICIALIZACIÓN ============
 
 document.addEventListener('DOMContentLoaded', async () => {
+    await resolverApiUrl();
     const usuario = await verificarAdmin();
     if (!usuario) return;
 
@@ -18,6 +28,26 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     cargarDashboard();
 });
+
+async function resolverApiUrl() {
+    if (apiResuelta) return;
+    for (const candidata of API_CANDIDATES) {
+        try {
+            const res = await fetch(`${candidata}?action=sesion`, { credentials: 'include' });
+            if (!res.ok) continue;
+            const contentType = (res.headers.get('content-type') || '').toLowerCase();
+            if (!contentType.includes('application/json')) continue;
+            const data = await res.json();
+            if (data && data.success === true && typeof data.autenticado === 'boolean') {
+                API_URL = candidata;
+                apiResuelta = true;
+                return;
+            }
+        } catch (e) {
+            // Probar la siguiente candidata
+        }
+    }
+}
 
 async function verificarAdmin() {
     try {
@@ -587,3 +617,4 @@ async function logout() {
     localStorage.removeItem('usuario');
     window.location.href = 'login.html';
 }
+

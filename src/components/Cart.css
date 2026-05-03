@@ -128,6 +128,18 @@
     position: relative;
     top: auto;
     margin-top: 2rem;
+    border: none;
+    padding: 1rem 0;
+    background: none;
+    box-shadow: none;
+  }
+
+  .cart-header {
+    border-bottom: 2px solid #d4af37;
+  }
+
+  .cart-items {
+    max-height: 300px;
   }
 }
 

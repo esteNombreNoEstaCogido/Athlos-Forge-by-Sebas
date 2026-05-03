@@ -461,6 +461,18 @@ h3 {
     border-left: 2px solid var(--gold-color) !important;
 }
 
+#cartOffcanvas .offcanvas-body {
+    overflow-y: auto;
+    max-height: calc(100vh - 70px);
+    -webkit-overflow-scrolling: touch;
+}
+
+#cart-items-container {
+    max-height: calc(100vh - 240px);
+    overflow-y: auto;
+    padding-right: 6px;
+}
+
 /* Ajuste para que no tape el botón en móvil */
 @media (max-width: 768px) {
     .cart-floating-btn {
@@ -600,7 +612,7 @@ h3 {
     position: relative;
     padding-bottom: 15px;
     font-weight: 700;
-    text-uppercase;
+    text-transform: uppercase;
     letter-spacing: 1px;
 }
 

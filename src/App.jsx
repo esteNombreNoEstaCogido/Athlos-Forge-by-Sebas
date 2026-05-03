@@ -4,16 +4,20 @@ import SearchBar from './components/SearchBar';
 import ProductGallery from './components/ProductGallery';
 import Cart from './components/Cart';
 import RegisterForm from './components/RegisterForm';
+import { useLocalStorage } from './hooks/useLocalStorage';
+import { mockProducts } from './services/mockData';
 import './App.css';
 
 function App() {
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
-  const [cart, setCart] = useState([]);
+  const [cart, setCart] = useLocalStorage('cart', []);
   const [searchTerm, setSearchTerm] = useState('');
   const [showRegister, setShowRegister] = useState(false);
+  const [showCart, setShowCart] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [notification, setNotification] = useState(null);
 
   // Cargar productos desde el API
   useEffect(() => {
@@ -36,26 +40,10 @@ function App() {
       setError(null);
     } catch (err) {
       console.error('Error:', err);
-      setError('No se pudieron cargar los productos');
-      // Datos de ejemplo si falla la API
-      const exampleProducts = [
-        {
-          id: 1,
-          nombre: 'Entrenamiento Básico',
-          descripcion: 'Plan de 4 semanas para principiantes',
-          precio: 29.99,
-          imagen: '/img/placeholder.jpg'
-        },
-        {
-          id: 2,
-          nombre: 'Entrenamiento Avanzado',
-          descripcion: 'Programa intensivo de 8 semanas',
-          precio: 59.99,
-          imagen: '/img/placeholder.jpg'
-        }
-      ];
-      setProducts(exampleProducts);
-      setFilteredProducts(exampleProducts);
+      // Usar datos de prueba si falla el API
+      setProducts(mockProducts);
+      setFilteredProducts(mockProducts);
+      setError('Usando productos de prueba (API no disponible)');
     } finally {
       setLoading(false);
     }
@@ -78,15 +66,26 @@ function App() {
   const handleAddToCart = (product, quantity = 1) => {
     setCart(prevCart => {
       const existingItem = prevCart.find(item => item.id === product.id);
+      let newCart;
       if (existingItem) {
-        return prevCart.map(item =>
+        newCart = prevCart.map(item =>
           item.id === product.id
             ? { ...item, cantidad: item.cantidad + quantity }
             : item
         );
+      } else {
+        newCart = [...prevCart, { ...product, cantidad: quantity }];
       }
-      return [...prevCart, { ...product, cantidad: quantity }];
+      
+      // Mostrar notificación
+      showNotification(`${product.nombre} agregado al carrito`);
+      return newCart;
     });
+  };
+
+  const showNotification = (message) => {
+    setNotification(message);
+    setTimeout(() => setNotification(null), 3000);
   };
 
   const handleRemoveFromCart = (productId) => {
@@ -119,20 +118,15 @@ function App() {
         setShowRegister(false);
       } else {
         alert('Error en el registro');
-      }
-    } catch (err) {
-      console.error('Error:', err);
-      alert('Error al registrarse');
-    }
-  };
-
-  return (
-    <div className="App">
-      <Header
-        cartCount={cart.length}
-        onShowCart={() => {}}
+      }setShowCart(!showCart)}
         onShowRegister={() => setShowRegister(!showRegister)}
       />
+
+      {notification && (
+        <div className="notification">
+          <i className="bi bi-check-circle"></i> {notification}
+        </div>
+      )}
 
       {showRegister ? (
         <RegisterForm onSubmit={handleRegister} onCancel={() => setShowRegister(false)} />
@@ -153,6 +147,32 @@ function App() {
               {!loading && filteredProducts.length === 0 && (
                 <p className="text-center">No se encontraron productos</p>
               )}
+            </div>
+
+            <div className="col-lg-4 d-none d-lg-block">
+              <Cart
+                items={cart}
+                onRemoveItem={handleRemoveFromCart}
+                onUpdateQuantity={handleUpdateQuantity}
+              />
+            </div>
+          </div>
+        </main>
+      )}
+
+      {showCart && (
+        <div className="cart-modal-overlay" onClick={() => setShowCart(false)}>
+          <div className="cart-modal" onClick={e => e.stopPropagation()}>
+            <button className="close-modal" onClick={() => setShowCart(false)}>
+              <i className="bi bi-x-lg"></i>
+            </button>
+            <Cart
+              items={cart}
+              onRemoveItem={handleRemoveFromCart}
+              onUpdateQuantity={handleUpdateQuantity}
+            />
+          </div>
+        </div)}
             </div>
 
             <div className="col-lg-4">
