@@ -1,0 +1,22 @@
+:root {
+  --gold-color: #d4af37;
+  --dark-bg: #1a1a1a;
+  --text-light: #e0e0e0;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: var(--dark-bg);
+  color: var(--text-light);
+}
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+}

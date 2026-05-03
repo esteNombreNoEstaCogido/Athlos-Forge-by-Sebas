@@ -1,0 +1,15 @@
+import './App.css';
+
+body {
+  background-color: #1a1a1a;
+  color: #e0e0e0;
+}
+
+.App {
+  min-height: 100vh;
+  background-color: #1a1a1a;
+}
+
+main {
+  min-height: 85vh;
+}
