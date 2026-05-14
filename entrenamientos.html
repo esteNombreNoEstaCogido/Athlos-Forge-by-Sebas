@@ -51,7 +51,7 @@
     </nav>
 
     <script>
-        const API_CANDIDATES = [
+        const ENTRENAM_API_LIST = [
             '/api/api.php',
             'http://localhost/Athlos%20Forge%20by%20Sebas/php/api.php',
             'http://127.0.0.1/Athlos%20Forge%20by%20Sebas/php/api.php',
@@ -76,7 +76,7 @@
 
         async function resolverApiBase() {
             if (apiBaseResuelta) return apiBaseResuelta;
-            for (const base of API_CANDIDATES) {
+            for (const base of ENTRENAM_API_LIST) {
                 if (await esApiValida(base)) {
                     apiBaseResuelta = base;
                     return apiBaseResuelta;
@@ -434,7 +434,7 @@
 
             if (lista.length === 0) {
                 contenedor.innerHTML = '<p class="text-center text-white py-5">Tu cesta está vacía. ¡Elige tus entrenamientos!</p>';
-                totalElem.textContent = '0.00€';
+                totalElem.textContent = '0.00\u20AC';
                 return;
             }
 
@@ -442,21 +442,50 @@
                 const subtotal = Number(item.subtotal ?? (Number(item.precio || 0) * Number(item.cantidad || 1)));
                 return acc + subtotal;
             }, 0);
-            totalElem.textContent = `${total.toFixed(2)}€`;
+            totalElem.textContent = total.toFixed(2) + '\u20AC';
 
             contenedor.innerHTML = lista.map(item => {
                 const cantidad = Number(item.cantidad || 1);
                 const precio = Number(item.precio || 0);
                 const subtotal = Number(item.subtotal ?? (precio * cantidad));
+                // FIX: añadir botón eliminar y controles de cantidad en el fallback
                 return `
                 <div class="d-flex justify-content-between align-items-center mb-3 p-2 border-bottom border-secondary">
-                    <div>
+                    <div style="flex:1;">
                         <h6 class="mb-1 small text-uppercase fw-bold text-white">${item.nombre || 'Entrenamiento'}</h6>
-                        <small class="text-white-50">x${cantidad}</small>
+                        <div class="d-flex align-items-center gap-2 mt-1">
+                            <button class="btn btn-sm btn-outline-secondary"
+                                style="width:24px;height:24px;padding:0;line-height:1;font-size:0.8em;"
+                                onclick="eliminarItemFallback(${item.id}, ${cantidad - 1})">-</button>
+                            <small class="text-white">x${cantidad}</small>
+                            <button class="btn btn-sm btn-outline-secondary"
+                                style="width:24px;height:24px;padding:0;line-height:1;font-size:0.8em;"
+                                onclick="eliminarItemFallback(${item.id}, ${cantidad + 1})">+</button>
+                        </div>
+                        <small class="text-gold-flat fw-bold">${subtotal.toFixed(2)}\u20AC</small>
                     </div>
-                    <span class="text-gold-flat small fw-bold">${subtotal.toFixed(2)}€</span>
+                    <button class="btn btn-sm text-danger" title="Eliminar"
+                        onclick="eliminarItemFallback(${item.id}, 0)">\u2715</button>
                 </div>`;
             }).join('');
+        }
+
+        // FIX: función de eliminar/actualizar para el modo fallback
+        function eliminarItemFallback(id, nuevaCantidad) {
+            let lista = parseJsonSeguro(localStorage.getItem('athlosCarrito'), []);
+            if (nuevaCantidad < 1) {
+                // Eliminar el item
+                lista = lista.filter(item => item.id !== id);
+            } else {
+                // Actualizar cantidad
+                const item = lista.find(i => i.id === id);
+                if (item) {
+                    item.cantidad = nuevaCantidad;
+                    item.subtotal = item.precio * nuevaCantidad;
+                }
+            }
+            localStorage.setItem('athlosCarrito', JSON.stringify(lista));
+            renderizarCarritoFallback();
         }
 
         window.addTrainingToCart = async function (btn) {

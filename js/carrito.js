@@ -165,21 +165,31 @@ window.eliminarDelCarrito = async function(id, idServidor) {
             if (data.success) {
                 await sincronizarCarritoDesdeAPI();
                 mostrarNotificacion('Eliminado del carrito', 'success');
+            } else {
+                // FIX: notificar al usuario cuando el servidor devuelve error
+                mostrarNotificacion(data.mensaje || 'No se pudo eliminar el artículo', 'error');
             }
         } catch (error) {
+            // Fallback local si hay error de red
             carrito = carrito.filter(item => item.id !== id);
             guardarYActualizar();
+            mostrarNotificacion('Eliminado localmente (sin conexión)', 'warning');
         }
     } else {
         carrito = carrito.filter(item => item.id !== id);
         guardarYActualizar();
+        mostrarNotificacion('Artículo eliminado de la cesta', 'success');
     }
 };
 
 // ============ ACTUALIZAR CANTIDAD ============
 
 window.actualizarCantidad = async function(id, idServidor, nuevaCantidad) {
-    if (nuevaCantidad < 1) return;
+    // FIX: si la nueva cantidad es 0 o negativa, eliminar el artículo
+    if (nuevaCantidad < 1) {
+        await eliminarDelCarrito(id, idServidor);
+        return;
+    }
 
     if (estaAutenticado() && idServidor) {
         try {
@@ -375,10 +385,10 @@ function confirmarCompra(tarjetaMasked) {
             <h4 style="color:#D4AF37;margin-bottom:15px;text-align:center;">Confirmar Compra</h4>
             <div style="background:#1a1a1a;border-radius:5px;padding:15px;margin-bottom:20px;">
                 <p style="margin-bottom:10px;font-size:0.9em;">Resumen del pedido:</p>
-                <p style="font-size:1.3em;font-weight:bold;color:#D4AF37;margin-bottom:15px;">${total.toFixed(2)}€</p>
+                <p style="font-size:1.3em;font-weight:bold;color:#D4AF37;margin-bottom:15px;">${total.toFixed(2)}&euro;</p>
                 <div style="border-top:1px solid #444;padding-top:10px;">
                     <p style="font-size:0.85em;color:#aaa;margin-bottom:5px;">Método de pago:</p>
-                    <p style="font-size:1em;letter-spacing:1px;">💳 ${tarjetaMasked}</p>
+                    <p style="font-size:1em;letter-spacing:1px;">&#128179; ${tarjetaMasked}</p>
                 </div>
             </div>
             <div style="display:flex;gap:10px;">
@@ -418,16 +428,16 @@ function mostrarConfirmacionPedido(datos) {
     const modal = document.createElement('div');
     modal.style.cssText = 'background:#2d2d2d;border:2px solid #D4AF37;border-radius:10px;padding:30px;max-width:450px;width:90%;color:#fff;text-align:center;';
     modal.innerHTML = `
-        <div style="font-size:3em;margin-bottom:10px;">✅</div>
-        <h3 style="color:#D4AF37;margin-bottom:10px;">¡Pedido Confirmado!</h3>
+        <div style="font-size:3em;margin-bottom:10px;">&#9989;</div>
+        <h3 style="color:#D4AF37;margin-bottom:10px;">&#161;Pedido Confirmado!</h3>
         <p style="margin-bottom:15px;">Tu pedido ha sido procesado correctamente</p>
         <div style="background:#1a1a1a;border-radius:5px;padding:15px;text-align:left;margin-bottom:15px;">
-            <p><strong style="color:#D4AF37;">Nº Pedido:</strong> ${datos.numero_pedido}</p>
-            <p><strong style="color:#D4AF37;">Total:</strong> ${datos.total.toFixed(2)}€</p>
+            <p><strong style="color:#D4AF37;">N&ordm; Pedido:</strong> ${datos.numero_pedido}</p>
+            <p><strong style="color:#D4AF37;">Total:</strong> ${datos.total.toFixed(2)}&euro;</p>
             <p><strong style="color:#D4AF37;">Estado:</strong> ${datos.estado}</p>
             <p><strong style="color:#D4AF37;">Tarjeta:</strong> ${datos.tarjeta_usada}</p>
             <p><strong style="color:#D4AF37;">Entrega estimada:</strong> ${formatearFecha(datos.fecha_entrega_estimada)}</p>
-            ${datos.email_enviado ? '<p style="color:#28a745;margin-top:10px;">📧 Email de confirmación enviado</p>' : '<p style="color:#ffc107;margin-top:10px;">📧 El email de confirmación será enviado en breve</p>'}
+            ${datos.email_enviado ? '<p style="color:#28a745;margin-top:10px;">&#128231; Email de confirmación enviado</p>' : '<p style="color:#ffc107;margin-top:10px;">&#128231; El email de confirmación será enviado en breve</p>'}
         </div>
         <button onclick="this.closest('div[style*=fixed]').remove()" 
                 style="padding:12px 30px;background:linear-gradient(135deg,#D4AF37,#B8860B);color:#1a1a1a;border:none;border-radius:5px;cursor:pointer;font-weight:bold;font-size:1em;">
@@ -532,11 +542,12 @@ function renderizarItems() {
         btnMenos.className = 'btn btn-sm btn-outline-secondary';
         btnMenos.textContent = '-';
         btnMenos.style.cssText = 'width:24px;height:24px;padding:0;line-height:1;font-size:0.8em;';
+        // FIX: al llegar a 0, elimina el item en vez de bloquearse
         btnMenos.addEventListener('click', () => actualizarCantidad(item.id, item.id_servidor, (item.cantidad || 1) - 1));
         
         const cantSpan = document.createElement('span');
         cantSpan.className = 'text-white small';
-        cantSpan.textContent = `x${item.cantidad || 1}`;
+        cantSpan.textContent = 'x' + (item.cantidad || 1);
         
         const btnMas = document.createElement('button');
         btnMas.className = 'btn btn-sm btn-outline-secondary';
@@ -549,11 +560,11 @@ function renderizarItems() {
         cantidadDiv.appendChild(btnMas);
         infoDiv.appendChild(cantidadDiv);
 
-        // Precio
+        // FIX: usar entidad HTML para el símbolo euro en lugar de carácter directo
         const precioSpan = document.createElement('span');
         precioSpan.className = 'text-gold-flat small';
         const subtotalSeguro = Number(item.subtotal ?? (Number(item.precio || 0) * Number(item.cantidad || 1)));
-        precioSpan.textContent = `${subtotalSeguro.toFixed(2)}�`;
+        precioSpan.textContent = subtotalSeguro.toFixed(2) + '\u20AC';
         infoDiv.appendChild(precioSpan);
 
         // Aviso de stock
@@ -561,15 +572,15 @@ function renderizarItems() {
             const aviso = document.createElement('small');
             aviso.className = 'd-block mt-1';
             aviso.style.color = '#ffc107';
-            aviso.textContent = '⚠ ' + item.aviso_stock;
+            aviso.textContent = '\u26A0 ' + item.aviso_stock;
             infoDiv.appendChild(aviso);
         }
 
         // Botón eliminar
         const botonEliminar = document.createElement('button');
         botonEliminar.className = 'btn btn-sm text-danger';
-        botonEliminar.textContent = '✕';
-        botonEliminar.setAttribute('aria-label', `Eliminar ${item.nombre} del carrito`);
+        botonEliminar.textContent = '\u2715';
+        botonEliminar.setAttribute('aria-label', 'Eliminar ' + item.nombre + ' del carrito');
         botonEliminar.addEventListener('click', () => eliminarDelCarrito(item.id, item.id_servidor));
 
         itemDiv.appendChild(infoDiv);
@@ -584,7 +595,8 @@ function calcularTotal() {
         const subtotal = Number(item.subtotal ?? (Number(item.precio || 0) * Number(item.cantidad || 1)));
         return sum + subtotal;
     }, 0);
-    totalPrecio.textContent = `${total.toFixed(2)}�`;
+    // FIX: usar unicode escape para el símbolo euro
+    totalPrecio.textContent = total.toFixed(2) + '\u20AC';
 }
 
 // ============ INICIALIZAR ============
@@ -597,5 +609,3 @@ document.addEventListener('DOMContentLoaded', async () => {
         guardarYActualizar();
     }
 });
-
-

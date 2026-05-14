@@ -118,7 +118,18 @@ function App() {
         setShowRegister(false);
       } else {
         alert('Error en el registro');
-      }setShowCart(!showCart)}
+      }
+    } catch (err) {
+      console.error('Error:', err);
+      alert('Error al registrarse');
+    }
+  };
+
+  return (
+    <div className="App">
+      <Header
+        cartCount={cart.length}
+        onShowCart={() => setShowCart(!showCart)}
         onShowRegister={() => setShowRegister(!showRegister)}
       />
 
@@ -172,18 +183,7 @@ function App() {
               onUpdateQuantity={handleUpdateQuantity}
             />
           </div>
-        </div)}
-            </div>
-
-            <div className="col-lg-4">
-              <Cart
-                items={cart}
-                onRemoveItem={handleRemoveFromCart}
-                onUpdateQuantity={handleUpdateQuantity}
-              />
-            </div>
-          </div>
-        </main>
+        </div>
       )}
     </div>
   );
