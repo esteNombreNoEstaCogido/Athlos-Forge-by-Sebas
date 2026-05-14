@@ -4,8 +4,37 @@
 class AutenticacionManager {
     constructor() {
         this.API_URL = 'php/api.php';
+        this.API_CANDIDATES = [
+            '/api/api.php',
+            'http://localhost/Athlos%20Forge%20by%20Sebas/php/api.php',
+            'http://127.0.0.1/Athlos%20Forge%20by%20Sebas/php/api.php',
+            'php/api.php',
+            '/php/api.php',
+            '/Athlos%20Forge%20by%20Sebas/php/api.php'
+        ];
+        this.apiResuelta = false;
         this.initEventListeners();
         this.verificarSesion();
+    }
+
+    async resolverApiUrl() {
+        if (this.apiResuelta) return;
+        for (const candidata of this.API_CANDIDATES) {
+            try {
+                const res = await fetch(`${candidata}?action=sesion`, { credentials: 'include' });
+                if (!res.ok) continue;
+                const contentType = (res.headers.get('content-type') || '').toLowerCase();
+                if (!contentType.includes('application/json')) continue;
+                const data = await res.json();
+                if (data && data.success === true && typeof data.autenticado === 'boolean') {
+                    this.API_URL = candidata;
+                    this.apiResuelta = true;
+                    return;
+                }
+            } catch (e) {
+                // Probar la siguiente candidata
+            }
+        }
     }
 
     initEventListeners() {
@@ -31,6 +60,7 @@ class AutenticacionManager {
     // === VERIFICAR SESIÓN ACTIVA ===
     async verificarSesion() {
         try {
+            await this.resolverApiUrl();
             const response = await fetch(`${this.API_URL}?action=sesion`, { credentials: 'include' });
             const data = await response.json();
 
@@ -128,6 +158,7 @@ class AutenticacionManager {
         }
 
         try {
+            await this.resolverApiUrl();
             const response = await fetch(`${this.API_URL}?action=login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -180,6 +211,7 @@ class AutenticacionManager {
         if (!terminos) { this.mostrarError(registerAlert, 'Debes aceptar los términos y condiciones.'); return; }
 
         try {
+            await this.resolverApiUrl();
             const response = await fetch(`${this.API_URL}?action=register`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -230,3 +262,4 @@ class AutenticacionManager {
 document.addEventListener('DOMContentLoaded', () => {
     new AutenticacionManager();
 });
+

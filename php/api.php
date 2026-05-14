@@ -56,7 +56,8 @@ header('Content-Type: application/json; charset=utf-8');
 // CORS dinámico: permitir localhost con cualquier esquema/puerto
 $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
 $allowed_origins = ['http://localhost', 'http://127.0.0.1', 'http://localhost:80', 'http://127.0.0.1:80'];
-if (in_array($origin, $allowed_origins)) {
+$is_localhost_with_port = preg_match('/^https?:\/\/(localhost|127\.0\.0\.1):\d+$/', $origin);
+if (in_array($origin, $allowed_origins) || $is_localhost_with_port) {
     header("Access-Control-Allow-Origin: $origin");
 } else {
     header('Access-Control-Allow-Origin: http://localhost');
