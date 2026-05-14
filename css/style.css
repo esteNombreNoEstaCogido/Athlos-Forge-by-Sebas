@@ -80,18 +80,48 @@ h3 {
     display: flex;
     align-items: center;
     position: relative;
+    overflow: hidden;
 
     /* SEPARACIÓN CLAVE: Aquí damos el espacio entre barra y contenido */
     padding-top: 160px !important;
     /* Antes era menos, ahora hay buen espacio */
     padding-bottom: 50px;
 
+    /* Fallback imagen estática por si no carga el vídeo */
     background: radial-gradient(circle at 30% 50%, rgba(212, 175, 55, 0.08) 0%, rgba(0, 0, 0, 0) 60%),
         linear-gradient(180deg, rgba(0, 0, 0, 0.7) 0%, rgba(5, 5, 5, 1) 100%),
         url('../img/fondoGym.jpg');
-
     background-size: cover;
     background-position: center;
+}
+
+/* Vídeo de fondo del hero */
+.hero-video-bg {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    min-width: 100%;
+    min-height: 100%;
+    width: auto;
+    height: auto;
+    object-fit: cover;
+    z-index: 0;
+}
+
+/* Capa de oscurecimiento sobre el vídeo (mantiene legibilidad del texto) */
+.hero-video-overlay {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 30% 50%, rgba(212, 175, 55, 0.08) 0%, rgba(0, 0, 0, 0) 60%),
+        linear-gradient(180deg, rgba(0, 0, 0, 0.65) 0%, rgba(5, 5, 5, 0.95) 100%);
+    z-index: 1;
+}
+
+/* El contenido del hero debe quedar por encima del vídeo y la capa */
+.hero-section > .container {
+    position: relative;
+    z-index: 2;
 }
 
 /* Ajustes para el botón de cerrar cuando usamos tema oscuro */

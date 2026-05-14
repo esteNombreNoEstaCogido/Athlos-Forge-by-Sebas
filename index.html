@@ -204,6 +204,13 @@
     </script>
 
     <section class="hero-section" role="main" aria-label="Párrafo de entrenamiento">
+        <!-- Vídeo de fondo: sube tu vídeo a la carpeta /video/ con el nombre hero-bg.mp4 -->
+        <video class="hero-video-bg" autoplay muted loop playsinline poster="img/fondoGym.jpg">
+            <source src="video/hero-bg.mp4" type="video/mp4">
+        </video>
+        <!-- Capa oscura sobre el vídeo para mantener legibilidad -->
+        <div class="hero-video-overlay" aria-hidden="true"></div>
+
         <!--
             Sección principal (hero):
             - `hero-section` es una clase personalizada (no Bootstrap).
