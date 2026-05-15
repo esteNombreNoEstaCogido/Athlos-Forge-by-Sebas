@@ -6,7 +6,7 @@
     <title>Athlos Forge by Sebas</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/style.css?v=2">
 
     <style>
         .hero-tab-nav {
@@ -387,31 +387,110 @@
                     <h2 class="display-4 mb-4 text-gold-gradient fw-bold">FORJA TU DESTINO</h2>
                     <p class="lead text-white mb-5">Descubre el poder del entrenamiento profesional que transforma vidas</p>
                     
-                    <div class="video-wrapper position-relative">
+                    <div class="video-wrapper position-relative rounded overflow-hidden shadow-lg">
                         <video 
                             id="introVideo" 
                             controls 
                             preload="metadata" 
-                            class="w-100 rounded shadow-lg"
+                            class="w-100 d-block"
                             poster="img/fondoGym.jpg"
                             aria-label="Vídeo introductorio de Athlos Forge"
-                            style="max-height: 60vh; object-fit: cover;">
-                            <source src="video/intro-athlos.mp4" type="video/mp4">
-                            <source src="video/intro-athlos.webm" type="video/webm">
-                            Tu navegador no soporta el elemento de vídeo. 
-                            <a href="video/intro-athlos.mp4">Descarga el vídeo</a>
+                            style="max-height: 60vh; object-fit: contain; background: #000;">
+                            <source src="video/video%20athlos%20forge.mp4" type="video/mp4">
+                            Tu navegador no soporta el elemento de vídeo.
                         </video>
-                        
-                        <!-- Overlay con controles personalizados -->
-                        <div class="video-overlay d-flex align-items-center justify-content-center">
-                            <button class="btn btn-gold btn-lg play-btn" onclick="playVideo()" aria-label="Reproducir vídeo">
-                                <i class="bi bi-play-circle-fill fs-1"></i>
-                            </button>
-                        </div>
                     </div>
                     
-                    <p class="text-white mt-3 small">Haz clic en play para ver nuestra introducción completa</p>
+                    <p class="text-white mt-3 small opacity-75">Pulsa play para descubrir la metodología Athlos Forge</p>
                 </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- POR QUÉ CONTRATARME - 3 CARDS -->
+    <section class="why-hire-section py-5" role="region" aria-label="Razones para entrenar con Sebas">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h2 class="display-5 fw-bold text-gold-gradient">¿POR QUÉ ENTRENAR CONMIGO?</h2>
+                <p class="lead text-white opacity-75 mt-2">Tres razones que marcan la diferencia</p>
+                <div class="why-divider mx-auto mt-3"></div>
+            </div>
+
+            <div class="row g-5 justify-content-center">
+
+                <!-- TARJETA 1: Experiencia -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="why-card h-100 p-4 p-xl-5 text-center">
+                        <div class="why-card-icon mb-4">
+                            <i class="bi bi-award-fill"></i>
+                        </div>
+                        <h3 class="why-card-title">9 Años de Experiencia</h3>
+                        <p class="why-card-text">
+                            Casi una década dedicada en cuerpo y alma al entrenamiento personal.
+                            Cada año ha sumado conocimiento práctico, casos reales y una metodología
+                            perfeccionada sesión a sesión.
+                        </p>
+                        <div class="why-card-list-wrap mt-3">
+                            <ul class="why-card-list">
+                                <li><i class="bi bi-check2-circle text-gold-flat"></i>9 años de práctica real</li>
+                                <li><i class="bi bi-check2-circle text-gold-flat"></i>Certificado en Entrenamiento Personal</li>
+                                <li><i class="bi bi-check2-circle text-gold-flat"></i>Formación continua y actualizada</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TARJETA 2: Método personalizado (destacada) -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="why-card why-card--featured h-100 p-4 p-xl-5 text-center">
+                        <div class="why-card-badge">MÁS POPULAR</div>
+                        <div class="why-card-icon mb-4">
+                            <i class="bi bi-person-check-fill"></i>
+                        </div>
+                        <h3 class="why-card-title">Método 100% Personalizado</h3>
+                        <p class="why-card-text">
+                            Ningún cuerpo es igual. Cada plan de entrenamiento se diseña desde cero 
+                            según tus objetivos, condición física y disponibilidad horaria. 
+                            Tu progreso es el único parámetro que importa.
+                        </p>
+                        <div class="why-card-list-wrap mt-3">
+                            <ul class="why-card-list">
+                                <li><i class="bi bi-check2-circle text-gold-flat"></i>Evaluación física inicial gratuita</li>
+                                <li><i class="bi bi-check2-circle text-gold-flat"></i>Seguimiento semanal de progreso</li>
+                                <li><i class="bi bi-check2-circle text-gold-flat"></i>Ajuste continuo del plan</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TARJETA 3: Resultados reales -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="why-card h-100 p-4 p-xl-5 text-center">
+                        <div class="why-card-icon mb-4">
+                            <i class="bi bi-graph-up-arrow"></i>
+                        </div>
+                        <h3 class="why-card-title">Resultados Reales</h3>
+                        <p class="why-card-text">
+                            Más de 200 alumnos han transformado su cuerpo y calidad de vida con el 
+                            método Athlos Forge. No vendemos promesas vacías: cada objetivo tiene 
+                            un plan estructurado y un plazo realista.
+                        </p>
+                        <div class="why-card-list-wrap mt-3">
+                            <ul class="why-card-list">
+                                <li><i class="bi bi-check2-circle text-gold-flat"></i>+200 alumnos satisfechos</li>
+                                <li><i class="bi bi-check2-circle text-gold-flat"></i>Resultados visibles desde la semana 4</li>
+                                <li><i class="bi bi-check2-circle text-gold-flat"></i>Garantía de satisfacción</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="text-center mt-5">
+                <a href="entrenamientos.html" class="btn btn-gold px-5 py-3 fw-bold" style="width: auto; display: inline-block;">
+                    VER ENTRENAMIENTOS <i class="bi bi-arrow-right ms-2"></i>
+                </a>
             </div>
         </div>
     </section>

@@ -6,15 +6,39 @@
  * AES-256-CBC para cifrado de tarjetas de crédito
  */
 
-// ============ CONFIGURACIÓN ============
-define('DB_HOST', 'localhost');
-define('DB_USER', 'root');
-define('DB_PASS', '');
-define('DB_NAME', 'athlos_forge');
+// ============ CARGA DE VARIABLES DE ENTORNO ============
+$envFile = __DIR__ . '/../.env';
+if (file_exists($envFile)) {
+    $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    foreach ($lines as $line) {
+        $line = trim($line);
+        if ($line === '' || strpos($line, '#') === 0) {
+            continue;
+        }
+        if (strpos($line, '=') !== false) {
+            list($key, $value) = explode('=', $line, 2);
+            $key   = trim($key);
+            $value = trim($value);
+            if (!array_key_exists($key, $_ENV)) {
+                $_ENV[$key] = $value;
+                putenv("$key=$value");
+            }
+        }
+    }
+} else {
+    http_response_code(500);
+    die(json_encode([
+        'success' => false,
+        'mensaje' => 'Archivo .env no encontrado. Copia .env.example como .env y configura tus credenciales.'
+    ]));
+}
 
-// Clave para cifrado AES-256-CBC de tarjetas de crédito
-// En producción, mover a variable de entorno o archivo .env fuera del webroot
-define('AES_KEY', 'AthlosForge2026SecretKey!@#$5678');
+// ============ CONFIGURACIÓN ============
+define('DB_HOST',    $_ENV['DB_HOST']    ?? 'localhost');
+define('DB_USER',    $_ENV['DB_USER']    ?? 'root');
+define('DB_PASS',    $_ENV['DB_PASS']    ?? '');
+define('DB_NAME',    $_ENV['DB_NAME']    ?? 'athlos_forge');
+define('AES_KEY',    $_ENV['AES_KEY']    ?? '');
 define('AES_METHOD', 'aes-256-cbc');
 
 // ============ CONEXIÓN PDO ============
