@@ -448,7 +448,7 @@
                 const cantidad = Number(item.cantidad || 1);
                 const precio = Number(item.precio || 0);
                 const subtotal = Number(item.subtotal ?? (precio * cantidad));
-                // FIX: añadir botón eliminar y controles de cantidad en el fallback
+                // Genera la tarjeta del item con botones +/- y botón eliminar (modo sin conexión)
                 return `
                 <div class="d-flex justify-content-between align-items-center mb-3 p-2 border-bottom border-secondary">
                     <div style="flex:1;">
@@ -470,7 +470,7 @@
             }).join('');
         }
 
-        // FIX: función de eliminar/actualizar para el modo fallback
+        // Elimina o actualiza cantidad de un item en el carrito local (modo sin conexión)
         function eliminarItemFallback(id, nuevaCantidad) {
             let lista = parseJsonSeguro(localStorage.getItem('athlosCarrito'), []);
             if (nuevaCantidad < 1) {

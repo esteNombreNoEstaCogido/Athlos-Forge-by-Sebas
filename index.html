@@ -67,15 +67,7 @@
             background: rgba(212, 175, 55, 0.4);
             border-radius: 4px;
         }
-        .password-strength {
-            height: 5px;
-            border-radius: 3px;
-            margin-top: 5px;
-            background: #2a2a2a;
-        }
-        .password-strength.weak { background: #dc3545; }
-        .password-strength.medium { background: #ffc107; }
-        .password-strength.strong { background: #28a745; }
+        /* Los estilos de .password-strength están definidos en css/style.css */
     </style>
 </head>
 
@@ -148,58 +140,6 @@
             window.location.reload();
         }
         
-        // Video play function
-        function playVideo() {
-            const video = document.getElementById('introVideo');
-            const overlay = document.querySelector('.video-overlay');
-            
-            if (video) {
-                video.play();
-                if (overlay) {
-                    overlay.style.display = 'none';
-                }
-            }
-        }
-        
-        // Audio play functions for interactions
-        function playWelcomeSound() {
-            const audio = new Audio('audio/welcome.mp3');
-            audio.volume = 0.3;
-            audio.play().catch(e => console.log('Audio not available'));
-        }
-        
-        function playActionSound() {
-            const audio = new Audio('audio/action.mp3');
-            audio.volume = 0.2;
-            audio.play().catch(e => console.log('Audio not available'));
-        }
-        
-        // Add audio to button interactions
-        document.addEventListener('DOMContentLoaded', function() {
-            // Add sound to login/register buttons
-            const loginBtn = document.querySelector('#heroLogin .btn');
-            const registerBtn = document.querySelector('#heroRegister .btn');
-            
-            if (loginBtn) {
-                loginBtn.addEventListener('click', playActionSound);
-            }
-            
-            if (registerBtn) {
-                registerBtn.addEventListener('click', playActionSound);
-            }
-            
-            // Add sound to navigation links
-            const navLinks = document.querySelectorAll('.navbar-nav .nav-link');
-            navLinks.forEach(link => {
-                link.addEventListener('mouseenter', function() {
-                    // Subtle hover sound (very quiet)
-                    const hoverAudio = new Audio('audio/action.mp3');
-                    hoverAudio.volume = 0.05;
-                    hoverAudio.play().catch(e => {});
-                });
-            });
-        });
-        
         checkUserLogin();
     </script>
 
@@ -211,31 +151,23 @@
         <!-- Capa oscura sobre el vídeo para mantener legibilidad -->
         <div class="hero-video-overlay" aria-hidden="true"></div>
 
-        <!--
-            Sección principal (hero):
-            - `hero-section` es una clase personalizada (no Bootstrap).
-            - Dentro se usan utilidades Bootstrap: `container`, `row`, `col-lg-*`, `text-center`, etc.
-            - El diseño responsivo (mostrar/ocultar `.frase-ordeandor` / `.frase-movil`) se controla con CSS personalizado y media queries.
-        -->
         <div class="container">
             <div class="row align-items-center">
 
                 <div class="col-lg-5 mb-5 mb-lg-0 text-center text-lg-start">
 
-                    <!-- Texto grande para ordenador (antes: .desktop-quote) -->
+                    <!-- Frase visible en escritorio (oculta en móvil via CSS) -->
                     <div class="frase-ordenador">
-                        <!-- `display-3` y `display-4` son utilidades tipográficas de Bootstrap (tamaños grandes). -->
                         <h1 class="display-3 mb-4">
                             Quien fortalece su cuerpo en la <span class="text-gold-gradient">juventud</span>,
                             honra su <span class="text-gold-gradient">vejez</span>.
                         </h1>
-                        <!-- `lead` y `text-secondary` son clases de Bootstrap para texto destacado y color secundario. -->
                         <p class="lead text-white" style="font-family: 'Cinzel', serif; letter-spacing: 2px;">
                             ATHLOS FORGE BY SEBAS
                         </p>
                     </div>
 
-                    <!-- Texto alternativo para móvil (antes: .mobile-quote) -->
+                    <!-- Frase alternativa para móvil (oculta en escritorio via CSS) -->
                     <div class="frase-movil">
                         <h1 class="display-4 mb-4">
                             La verdadera Fuerza no se mide en kilos...
@@ -491,35 +423,6 @@
                 <a href="entrenamientos.html" class="btn btn-gold px-5 py-3 fw-bold" style="width: auto; display: inline-block;">
                     VER ENTRENAMIENTOS <i class="bi bi-arrow-right ms-2"></i>
                 </a>
-            </div>
-        </div>
-    </section>
-
-    <!-- AUDIO ELEMENTS SECTION -->
-    <section class="audio-section py-4" style="display: none;" role="region" aria-label="Elementos de audio">
-        <div class="container">
-            <div class="row justify-content-center">
-                <div class="col-lg-8">
-                    <h3 class="text-center text-gold-gradient mb-4">Efectos de Audio Interactivos</h3>
-                    
-                    <div class="audio-player">
-                        <h5 class="text-gold-flat mb-2">Sonido de Bienvenida</h5>
-                        <audio controls preload="none">
-                            <source src="audio/welcome.mp3" type="audio/mpeg">
-                            <source src="audio/welcome.ogg" type="audio/ogg">
-                            Tu navegador no soporta el elemento de audio.
-                        </audio>
-                    </div>
-                    
-                    <div class="audio-player">
-                        <h5 class="text-gold-flat mb-2">Efecto de Acción</h5>
-                        <audio controls preload="none">
-                            <source src="audio/action.mp3" type="audio/mpeg">
-                            <source src="audio/action.ogg" type="audio/ogg">
-                            Tu navegador no soporta el elemento de audio.
-                        </audio>
-                    </div>
-                </div>
             </div>
         </div>
     </section>

@@ -129,13 +129,13 @@ h3 {
     filter: invert(1) brightness(1.2);
 }
 
-/* Make invalid inputs clearly visible on dark background */
+/* Inputs inválidos visibles sobre fondo oscuro */
 .is-invalid {
     border-color: #e74c3c !important;
     box-shadow: 0 0 0 0.15rem rgba(231, 76, 60, 0.15) !important;
 }
 
-/* --- RESTO DEL DISEÑO IGUAL --- */
+/* --- FORMULARIO DE TARJETA (Hero) --- */
 .card-form {
     background-color: var(--card-bg);
     border: 1px solid #333;
@@ -871,20 +871,22 @@ h3 {
     }
 }
 
-/* --- VIDEO SECTION STYLES --- */
+/* --- SECCIÓN DE VÍDEO INTRODUCTORIO --- */
 .video-intro-section {
-    background: linear-gradient(135deg, rgba(0, 0, 0, 0.9) 0%, rgba(5, 5, 5, 1) 100%);
+    background: linear-gradient(180deg, var(--bg-color) 0%, #0a0a0a 100%);
     position: relative;
     overflow: hidden;
 }
 
+/* Marco dorado alrededor del reproductor de vídeo */
 .video-wrapper {
     position: relative;
     max-width: 800px;
     margin: 0 auto;
     border-radius: 15px;
     overflow: hidden;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8);
+    border: 2px solid rgba(212, 175, 55, 0.45);
+    box-shadow: 0 0 0 1px rgba(212, 175, 55, 0.1), 0 0 50px rgba(212, 175, 55, 0.12);
     transition: all 0.3s ease;
 }
 
@@ -934,37 +936,7 @@ h3 {
     font-size: 2rem;
 }
 
-/* --- AUDIO STYLES --- */
-.audio-player {
-    background: var(--card-bg);
-    border: 1px solid rgba(212, 175, 55, 0.3);
-    border-radius: 8px;
-    padding: 15px;
-    margin: 10px 0;
-    transition: all 0.3s ease;
-}
-
-.audio-player:hover {
-    border-color: var(--gold-color);
-    box-shadow: 0 0 15px rgba(212, 175, 55, 0.2);
-}
-
-.audio-player audio {
-    width: 100%;
-    background: transparent;
-    outline: none;
-}
-
-.audio-player audio::-webkit-media-controls-panel {
-    background: var(--card-bg);
-}
-
-.audio-player audio::-webkit-media-controls-current-time-display,
-.audio-player audio::-webkit-media-controls-time-remaining-display {
-    color: var(--gold-color);
-}
-
-/* --- ENHANCED ANIMATIONS --- */
+/* --- ANIMACIONES MEJORADAS --- */
 .btn-gold,
 .btn-gold-navbar,
 .btn-outline-warning {
@@ -982,7 +954,7 @@ h3 {
     box-shadow: 0 5px 15px rgba(212, 175, 55, 0.4);
 }
 
-/* Navigation hover animations */
+/* Animación hover en enlaces de navegación */
 .nav-link {
     transition: all 0.3s ease;
     position: relative;
@@ -1009,7 +981,7 @@ h3 {
     width: 100%;
 }
 
-/* Card animations */
+/* Animación de la tarjeta del formulario */
 .card-form {
     transition: all 0.3s ease;
 }
@@ -1019,7 +991,7 @@ h3 {
     box-shadow: 0 15px 35px rgba(0, 0, 0, 0.9);
 }
 
-/* Form element animations */
+/* Animación de inputs y selects al enfocar */
 .form-control,
 .form-select {
     transition: all 0.3s ease;
@@ -1031,7 +1003,7 @@ h3 {
     box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
 }
 
-/* Visual element animations */
+/* Efecto shimmer dorado en textos con gradiente */
 .text-gold-gradient {
     animation: goldShimmer 3s ease-in-out infinite;
 }
@@ -1047,35 +1019,24 @@ h3 {
     }
 }
 
-/* Responsive video */
+/* Vídeo responsivo en móvil */
 @media (max-width: 768px) {
     .video-wrapper {
         margin: 0 15px;
     }
-    
+
     .video-wrapper video {
         max-height: 50vh;
     }
-    
+
     .play-btn {
         width: 60px;
         height: 60px;
     }
-    
+
     .play-btn i {
         font-size: 1.5rem;
     }
-}
-
-/* --- SECCIÓN VÍDEO INTRODUCTORIO --- */
-.video-intro-section {
-    background: linear-gradient(180deg, var(--bg-color) 0%, #0a0a0a 100%);
-}
-
-/* Marco dorado alrededor del vídeo */
-.video-wrapper {
-    border: 2px solid rgba(212, 175, 55, 0.45);
-    box-shadow: 0 0 0 1px rgba(212, 175, 55, 0.1), 0 0 50px rgba(212, 175, 55, 0.12);
 }
 
 /* --- SECCIÓN "¿POR QUÉ CONTRATARME?" --- */

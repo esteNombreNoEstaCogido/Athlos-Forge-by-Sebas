@@ -42,7 +42,7 @@ function storageRemove(key) {
     try {
         localStorage.removeItem(key);
     } catch (e) {
-        // No-op
+        // Si el storage no está disponible, no hacemos nada
     }
 }
 
@@ -118,7 +118,7 @@ window.agregarAlCarrito = async function(nombre, precio, idArticulo) {
                 mostrarNotificacion(data.mensaje, 'success');
                 await sincronizarCarritoDesdeAPI();
             } else {
-                // Mensajes de validación del servidor (stock, inexistente, etc.)
+                // El servidor puede devolver mensajes de stock insuficiente, producto inexistente, etc.
                 mostrarNotificacion(data.mensaje, 'error');
             }
         } catch (error) {
@@ -126,7 +126,7 @@ window.agregarAlCarrito = async function(nombre, precio, idArticulo) {
             agregarLocal(nombre, precio, idArticulo);
         }
     } else {
-        // Sin sesión → carrito local
+        // Sin sesión activa → usar carrito local (localStorage)
         agregarLocal(nombre, precio, idArticulo);
         mostrarNotificacion(`${nombre} añadido a la cesta.`, 'success');
     }
@@ -166,11 +166,11 @@ window.eliminarDelCarrito = async function(id, idServidor) {
                 await sincronizarCarritoDesdeAPI();
                 mostrarNotificacion('Eliminado del carrito', 'success');
             } else {
-                // FIX: notificar al usuario cuando el servidor devuelve error
+                // El servidor devuelve el motivo del error al eliminar
                 mostrarNotificacion(data.mensaje || 'No se pudo eliminar el artículo', 'error');
             }
         } catch (error) {
-            // Fallback local si hay error de red
+            // Sin conexión: eliminar localmente como fallback
             carrito = carrito.filter(item => item.id !== id);
             guardarYActualizar();
             mostrarNotificacion('Eliminado localmente (sin conexión)', 'warning');
@@ -185,7 +185,7 @@ window.eliminarDelCarrito = async function(id, idServidor) {
 // ============ ACTUALIZAR CANTIDAD ============
 
 window.actualizarCantidad = async function(id, idServidor, nuevaCantidad) {
-    // FIX: si la nueva cantidad es 0 o negativa, eliminar el artículo
+    // Si la nueva cantidad es 0 o negativa, eliminar el artículo directamente
     if (nuevaCantidad < 1) {
         await eliminarDelCarrito(id, idServidor);
         return;
@@ -542,7 +542,7 @@ function renderizarItems() {
         btnMenos.className = 'btn btn-sm btn-outline-secondary';
         btnMenos.textContent = '-';
         btnMenos.style.cssText = 'width:24px;height:24px;padding:0;line-height:1;font-size:0.8em;';
-        // FIX: al llegar a 0, elimina el item en vez de bloquearse
+        // Al llegar a 0, el item se elimina del carrito automáticamente
         btnMenos.addEventListener('click', () => actualizarCantidad(item.id, item.id_servidor, (item.cantidad || 1) - 1));
         
         const cantSpan = document.createElement('span');
@@ -560,7 +560,7 @@ function renderizarItems() {
         cantidadDiv.appendChild(btnMas);
         infoDiv.appendChild(cantidadDiv);
 
-        // FIX: usar entidad HTML para el símbolo euro en lugar de carácter directo
+        // Se usa unicode escape \u20AC para el símbolo del euro (€)
         const precioSpan = document.createElement('span');
         precioSpan.className = 'text-gold-flat small';
         const subtotalSeguro = Number(item.subtotal ?? (Number(item.precio || 0) * Number(item.cantidad || 1)));
