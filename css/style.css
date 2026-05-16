@@ -878,6 +878,24 @@ h3 {
     overflow: hidden;
 }
 
+.audio-intro-section {
+    background: linear-gradient(180deg, rgba(255,255,255,0.02) 0%, rgba(255,255,255,0.04) 100%);
+}
+
+.audio-player-wrapper {
+    max-width: 780px;
+    margin: 0 auto;
+    border-radius: 1.25rem;
+    background: rgba(18, 18, 18, 0.88);
+    border: 1px solid rgba(212, 175, 55, 0.18);
+    box-shadow: 0 0 40px rgba(0, 0, 0, 0.25);
+}
+
+.audio-player-wrapper audio {
+    width: 100%;
+    outline: none;
+}
+
 /* Marco dorado alrededor del reproductor de vídeo */
 .video-wrapper {
     position: relative;
